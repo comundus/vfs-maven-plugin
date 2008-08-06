@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!-- see http://maven.apache.org/maven-1.x/plugins/changes/ -->
+<document>
+    <properties>
+        <title>Maven VFS Plugin Changes</title>
+        <author email="d.pleiss@comundus.com">Detlef Pleiß</author>
+    </properties>
+  
+    <body>
+        <release version="7.0.1c" date="2007-11-06">
+            <action dev="dp" type="add">added handling of Organizational Units</action>
+        </release>
+        <release version="7.0.1b" date="2007-07-31">
+            <action dev="dp" type="add">added WEB-INF/classes to the classpath; required for configuring fieldconfigurations in opencms-search.xml</action>
+        </release>
+        <release version="7.0.1" date="2007-07-16">
+            <action dev="dp" type="update">incorporated changes with OpenCms 7.0.1</action>
+            <action dev="dp" type="update">decoupled from special _opencmsshell version, now uses OpenCms in comundus version</action>
+        </release>
+        <release version="6.2.3" date="2007-04-11">
+            <action dev="dp" type="update">incorporated changes with OpenCms 6.2.3</action>
+        </release>
+        <release version="6.0.2b" date="2007-04-05">
+            <action dev="dp" type="update">added new style of module configuration with source file in opencms-module/opencms-module.xml</action>
+        </release>
+        <release version="1.0" date="2006-06-19">
+            <action dev="dp" type="add">initial release</action>
+        </release>
+    </body>
+</document>

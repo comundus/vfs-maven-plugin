@@ -1,0 +1,10 @@
+<project name="Maven VFS Plugin">
+   <body>
+    <menu name="Overview">
+      <item name="Plugin Goals" href="plugin-info.html"/>
+      <!-- item name="Introduction" href="introduction.html"/ -->
+      <!-- item name="How to Use" href="howto.html"/ -->
+    </menu>
+    ${reports}
+  </body>
+</project>

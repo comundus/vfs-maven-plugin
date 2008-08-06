@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+
+<ruleset name="Favorites">
+  <description>
+  This ruleset contains links to rules that I like to use.
+  see http://pmd.sourceforge.net/rules/index.html
+  </description>
+
+    <rule ref="rulesets/basic.xml">
+        <exclude name="EmptyCatchBlock" />
+    </rule>
+    <rule ref="rulesets/braces.xml" />
+    <rule ref="rulesets/clone.xml" />
+
+    <!-- rule ref="rulesets/codesize.xml"/ -->
+    <!-- rule ref="rulesets/controversial.xml" / -->
+
+    <rule ref="rulesets/coupling.xml">
+        <exclude name="ExcessiveImports" />
+    </rule>
+    <rule ref="rulesets/design.xml">
+		<exclude name="AbstractClassWithoutAbstractMethod" />
+        <exclude name="AvoidSynchronizedAtMethodLevel" />
+        <exclude name="AssignmentToNonFinalStatic" />
+		<exclude name="ImmutableField" />
+        <exclude name="NonThreadSafeSingleton" />
+        <exclude name="ConfusingTernary" />
+        <exclude name="PreserveStackTrace" />
+    </rule>
+    <rule ref="rulesets/finalizers.xml" />
+    <rule ref="rulesets/imports.xml" />
+
+    <!-- rule ref="rulesets/javabeans.xml" / -->
+    <rule ref="rulesets/junit.xml" />
+    <!-- rule ref="rulesets/naming.xml" / -->
+    <!-- rule ref="rulesets/scratchpad.xml" / -->
+
+    <rule ref="rulesets/strictexception.xml">
+		<exclude name="SignatureDeclareThrowsException" />
+        <exclude name="AvoidRethrowingException" />
+        <exclude name="ExceptionAsFlowControl" />
+	</rule>
+    <rule ref="rulesets/strings.xml">
+        <exclude name="AvoidDuplicateLiterals"/>
+    </rule>
+    <rule ref="rulesets/unusedcode.xml">
+    	<exclude name="UnusedPrivateMethod"/>
+    </rule>
+
+</ruleset>
