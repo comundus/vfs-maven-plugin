@@ -1,7 +1,12 @@
 package com.comundus.opencms.vfs;
 
 import org.apache.maven.plugin.MojoExecutionException;
+import org.opencms.main.CmsException;
+import org.xml.sax.SAXException;
 
+import com.comundus.opencms.VfsModule;
+
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -46,48 +51,39 @@ public class ModuleMojo extends AbstractVfsMojo {
      *             in case anything goes wrong
      */
     public final void execute() throws MojoExecutionException {
-        ClassLoader originalClassLoader = Thread.currentThread()
-                                                .getContextClassLoader();
-        ClassLoader classloader = this.getClassLoader();
-        Thread.currentThread().setContextClassLoader(classloader);
+//        ClassLoader originalClassLoader = Thread.currentThread()
+//                                                .getContextClassLoader();
+//        ClassLoader classloader = this.getClassLoader();
+//        Thread.currentThread().setContextClassLoader(classloader);
 
         // now we're running inside our own classloader
         // the target class MUST NOT have been loaded already,
         // so we have to invoke it via Reflection
         try {
-            Class invokeMeClass = classloader.loadClass(ModuleMojo.SHELLCLASS);
-            Constructor constr = invokeMeClass.getConstructor(AbstractVfsMojo.EMPTY);
-            Object o = constr.newInstance(new Object[] {  });
-            Method main = invokeMeClass.getMethod("execute",
-                    ModuleMojo.SHELLPARAMETERS);
-            main.invoke(o,
-                new Object[] {
+//            Class invokeMeClass = classloader.loadClass(ModuleMojo.SHELLCLASS);
+//            Constructor constr = invokeMeClass.getConstructor(AbstractVfsMojo.EMPTY);
+//            Object o = constr.newInstance(new Object[] {  });
+//            Method main = invokeMeClass.getMethod("execute",
+//                    ModuleMojo.SHELLPARAMETERS);
+        	VfsModule module = new VfsModule();
+            module.execute(
                     getWebappDirectory(), getAdminPassword(),
                     this.moduleSourcePath, this.moduleVersion
-                });
+                );
         } catch (NoClassDefFoundError e) {
             throw new MojoExecutionException("Failed to load " +
                 ModuleMojo.SHELLCLASS, e);
-        } catch (ClassNotFoundException e) {
-            throw new MojoExecutionException("Failed to load " +
-                ModuleMojo.SHELLCLASS, e);
-        } catch (NoSuchMethodException e) {
-            throw new MojoExecutionException("Failed to find " +
-                AbstractVfsMojo.SHELLMETHOD + "() in " + ModuleMojo.SHELLCLASS,
-                e);
-        } catch (InvocationTargetException e) {
-            throw new MojoExecutionException("Failure while executing " +
-                AbstractVfsMojo.SHELLMETHOD + "() in " + ModuleMojo.SHELLCLASS,
-                e);
-        } catch (IllegalAccessException e) {
-            throw new MojoExecutionException("Failed to access " +
-                AbstractVfsMojo.SHELLMETHOD + "() in " + ModuleMojo.SHELLCLASS,
-                e);
-        } catch (InstantiationException e) {
-            throw new MojoExecutionException(
-                "Failed to instantiate (abstract!)" + ModuleMojo.SHELLCLASS, e);
-        } finally {
-            Thread.currentThread().setContextClassLoader(originalClassLoader);
+        } catch (IOException e) {
+        	throw new MojoExecutionException(
+                    "Failed to instantiate (abstract!)" + ModuleMojo.SHELLCLASS, e);
+		} catch (CmsException e) {
+			throw new MojoExecutionException(
+	                "Failed to instantiate (abstract!)" + ModuleMojo.SHELLCLASS, e);
+		} catch (SAXException e) {
+			throw new MojoExecutionException(
+	                "Failed to instantiate (abstract!)" + ModuleMojo.SHELLCLASS, e);
+		} finally {
+            // Thread.currentThread().setContextClassLoader(originalClassLoader);
         }
     }
 }

@@ -136,7 +136,13 @@ public abstract class AbstractVfsMojo extends AbstractMojo {
                 "classes" + File.separatorChar;
             String webinflibdir = this.webappDirectory + File.separatorChar +
                 "WEB-INF" + File.separatorChar + "lib";
-            File[] res = new File(webinflibdir).listFiles();
+            
+            File fWebinfLibDir= new File(webinflibdir);
+            if(!fWebinfLibDir.isDirectory()){
+        	throw new RuntimeException("WEB-INF/lib could not be found or it is not a directory");
+            }
+            
+            File[] res=fWebinfLibDir.listFiles();
             Arrays.sort(res); // in order to get our "underscore"-jars first in the search path
 
             ArrayList list = new ArrayList();

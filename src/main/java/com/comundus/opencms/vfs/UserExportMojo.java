@@ -2,6 +2,8 @@ package com.comundus.opencms.vfs;
 
 import org.apache.maven.plugin.MojoExecutionException;
 
+import com.comundus.opencms.VfsUserExport;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -43,25 +45,20 @@ public class UserExportMojo extends AbstractVfsMojo {
      *             in case anything goes wrong
      */
     public final void execute() throws MojoExecutionException {
-        ClassLoader originalClassLoader = Thread.currentThread()
-                                                .getContextClassLoader();
-        ClassLoader classloader = this.getClassLoader();
-        Thread.currentThread().setContextClassLoader(classloader);
+       //  ClassLoader originalClassLoader = Thread.currentThread()
+                                              //  .getContextClassLoader();
+        // ClassLoader classloader = this.getClassLoader();
+        // Thread.currentThread().setContextClassLoader(classloader);
 
         // now we're running inside our own classloader
         // the target class MUST NOT have been loaded already,
         // so we have to invoke it via Reflection
         try {
-            Class invokeMeClass = classloader.loadClass(UserExportMojo.SHELLCLASS);
-            Constructor constr = invokeMeClass.getConstructor(AbstractVfsMojo.EMPTY);
-            Object o = constr.newInstance(new Object[] {  });
-            Method main = invokeMeClass.getMethod("execute",
-                    UserExportMojo.SHELLPARAMETERS);
-            main.invoke(o,
-                new Object[] {
+            VfsUserExport export = new VfsUserExport();
+            export.execute(
                     getWebappDirectory(), getAdminPassword(),
                     this.usergroupsSourceDirectory
-                });
+                );
         } catch (NoClassDefFoundError e) {
             throw new MojoExecutionException("Failed to load " +
                 UserExportMojo.SHELLCLASS, e);
@@ -84,8 +81,12 @@ public class UserExportMojo extends AbstractVfsMojo {
             throw new MojoExecutionException(
                 "Failed to instantiate (abstract!)" +
                 UserExportMojo.SHELLCLASS, e);
-        } finally {
-            Thread.currentThread().setContextClassLoader(originalClassLoader);
+        } catch (Exception e) {
+        	throw new MojoExecutionException(
+                    "Failed to instantiate (abstract!)" +
+                    UserExportMojo.SHELLCLASS, e);
+		} finally {
+            // Thread.currentThread().setContextClassLoader(originalClassLoader);
         }
     }
 }

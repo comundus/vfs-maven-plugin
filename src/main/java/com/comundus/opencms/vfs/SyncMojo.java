@@ -2,6 +2,8 @@ package com.comundus.opencms.vfs;
 
 import org.apache.maven.plugin.MojoExecutionException;
 
+import com.comundus.opencms.VfsSync;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -73,26 +75,26 @@ public class SyncMojo extends AbstractVfsMojo {
             return; // it's ok, nothing to sync
         }
 
-        ClassLoader originalClassLoader = Thread.currentThread()
-                                                .getContextClassLoader();
-        ClassLoader classloader = this.getClassLoader();
-        Thread.currentThread().setContextClassLoader(classloader);
+//        ClassLoader originalClassLoader = Thread.currentThread()
+//                                                .getContextClassLoader();
+//        ClassLoader classloader = this.getClassLoader();
+//        Thread.currentThread().setContextClassLoader(classloader);
 
         // now we're running inside our own classloader
         // the target class MUST NOT have been loaded already,
         // so we have to invoke it via Reflection
         try {
-            Class invokeMeClass = classloader.loadClass(SyncMojo.SHELLCLASS);
-            Constructor constr = invokeMeClass.getConstructor(AbstractVfsMojo.EMPTY);
-            Object o = constr.newInstance(new Object[] {  });
-            Method main = invokeMeClass.getMethod(AbstractVfsMojo.SHELLMETHOD,
-                    SyncMojo.SHELLPARAMETER);
-            main.invoke(o,
-                new Object[] {
+//            Class invokeMeClass = classloader.loadClass(SyncMojo.SHELLCLASS);
+//            Constructor constr = invokeMeClass.getConstructor(AbstractVfsMojo.EMPTY);
+//            Object o = constr.newInstance(new Object[] {  });
+//            Method main = invokeMeClass.getMethod(AbstractVfsMojo.SHELLMETHOD,
+//                    SyncMojo.SHELLPARAMETER);
+        	VfsSync sync = new VfsSync();
+            sync.execute(
                     getWebappDirectory(), this.syncSourceDirectory,
                     this.syncMetadataDirectory, this.syncVFSPaths,
                     getAdminPassword()
-                });
+                );
         } catch (NoClassDefFoundError e) {
             throw new MojoExecutionException("Failed to load " +
                 SyncMojo.SHELLCLASS, e);
@@ -111,8 +113,11 @@ public class SyncMojo extends AbstractVfsMojo {
         } catch (InstantiationException e) {
             throw new MojoExecutionException(
                 "Failed to instantiate (abstract!)" + SyncMojo.SHELLCLASS, e);
-        } finally {
-            Thread.currentThread().setContextClassLoader(originalClassLoader);
+        } catch (Exception e) {
+        	throw new MojoExecutionException(
+                    "Failed to instantiate (abstract!)" + SyncMojo.SHELLCLASS, e);
+		} finally {
+            // Thread.currentThread().setContextClassLoader(originalClassLoader);
         }
     }
 }

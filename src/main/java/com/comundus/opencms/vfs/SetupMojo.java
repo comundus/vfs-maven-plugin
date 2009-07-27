@@ -2,6 +2,8 @@ package com.comundus.opencms.vfs;
 
 import org.apache.maven.plugin.MojoExecutionException;
 
+import com.comundus.opencms.VfsSetup;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -55,23 +57,25 @@ public class SetupMojo extends AbstractVfsMojo {
     public final void execute() throws MojoExecutionException {
         ClassLoader originalClassLoader = Thread.currentThread()
                                                 .getContextClassLoader();
-        ClassLoader classloader = this.getClassLoader();
-        Thread.currentThread().setContextClassLoader(classloader);
+        // ClassLoader classloader = this.getClassLoader();
+        // Thread.currentThread().setContextClassLoader(classloader);
 
         // now we're running inside our own classloader
         // the target class MUST NOT have been loaded already,
         // so we have to invoke it via Reflection
         try {
-            Class invokeMeClass = classloader.loadClass(SetupMojo.SHELLCLASS);
-            Constructor constr = invokeMeClass.getConstructor(AbstractVfsMojo.EMPTY);
-            Object o = constr.newInstance(new Object[] {  });
-            Method main = invokeMeClass.getMethod(AbstractVfsMojo.SHELLMETHOD,
-                    SetupMojo.SHELLPARAMETERS);
-            main.invoke(o,
-                new Object[] {
-                    getWebappDirectory(), this.opencmsmoduleSourceDirectory,
-                    this.opencmsModules, getAdminPassword()
-                });
+            // Class invokeMeClass = classloader.loadClass(SetupMojo.SHELLCLASS);
+            //Constructor constr = invokeMeClass.getConstructor(AbstractVfsMojo.EMPTY);
+            // Object o = constr.newInstance(new Object[] {  });
+//            Method main = invokeMeClass.getMethod(AbstractVfsMojo.SHELLMETHOD,
+//                    SetupMojo.SHELLPARAMETERS);
+            VfsSetup vfsSetup = new VfsSetup();
+            vfsSetup.execute(getWebappDirectory(), this.opencmsmoduleSourceDirectory, this.opencmsModules, getAdminPassword());
+//            main.invoke(o,
+//                new Object[] {
+//                    getWebappDirectory(), this.opencmsmoduleSourceDirectory,
+//                    this.opencmsModules, getAdminPassword()
+//                });
         } catch (NoClassDefFoundError e) {
             throw new MojoExecutionException("Failed to load " +
                 SetupMojo.SHELLCLASS, e);
@@ -90,7 +94,10 @@ public class SetupMojo extends AbstractVfsMojo {
         } catch (InstantiationException e) {
             throw new MojoExecutionException(
                 "Failed to instantiate (abstract!)" + SetupMojo.SHELLCLASS, e);
-        } finally {
+        } catch (Exception e) {
+        	throw new MojoExecutionException(
+                    "Failed to instantiate (abstract!)" + SetupMojo.SHELLCLASS, e);
+		} finally {
             Thread.currentThread().setContextClassLoader(originalClassLoader);
         }
     }
