@@ -1,0 +1,10 @@
+ ------
+ maven-vfs-plugin
+ ------
+
+NOTE:
+	this is work in progress and far from a definitive document!
+
+Introduction
+
+  The VFS plugin performs all tasks related to 

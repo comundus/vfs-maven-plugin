@@ -1,0 +1,42 @@
+ ------
+ Maven-VFS-Plugin
+ ------
+
+NOTE:
+	this is work in progress and far from a definitive document!
+	
+How to use
+
+  The Maven-VFS-Plugin is used together with other plugins to build an OpenCms site from sources and to synchronize these with changes in the OpenCms VFS.
+  
+  For programmatic functionality (taglibs or overridden OpenCms classes) in form of JAR files the normal Maven building mechanims are used:
+  Subprojects in a multi project build take care of building JARs from sources and the WAR project {{webapp}} includes them in {{WEB-INF/lib}}.
+  The Maven Reactor takes care of the build order so the necessary Java projects get built first, before the WAR project. 
+  In order for this to work, the {{parent}} project must list these Java projects and the {{webapp}} project must list them as dependencies.
+  Otherwise the JAR does not get included in the WAR or Maven fails when it tries to download the JAR artifact from a repository.
+
+  
+
+* cleaning a project
+
+
+
+
+  Put the files you want to publish in the project site into src/files.
+  In order to have them published add this to your pom.xml:
+
+-------------------
+<project>
+  ...
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>maven-files-plugin</artifactId>
+            </plugin>
+            ...
+        </plugins>
+    </reporting>
+    ...
+</project>
+-------------------

@@ -1,0 +1,8 @@
+<classpath>
+  <classpathentry kind="src" path="src/main/java"/>
+  <classpathentry kind="output" path="target/classes"/>
+  <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+  <classpathentry kind="var" path="M2_REPO/org/codehaus/plexus/plexus-utils/1.1/plexus-utils-1.1.jar" sourcepath="M2_REPO/org/codehaus/plexus/plexus-utils/1.1/plexus-utils-1.1-sources.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/apache/maven/maven-plugin-api/2.0.5/maven-plugin-api-2.0.5.jar" sourcepath="M2_REPO/org/apache/maven/maven-plugin-api/2.0.5/maven-plugin-api-2.0.5-sources.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/apache/maven/maven-artifact/2.0.5/maven-artifact-2.0.5.jar" sourcepath="M2_REPO/org/apache/maven/maven-artifact/2.0.5/maven-artifact-2.0.5-sources.jar"/>
+</classpath>
