@@ -1,0 +1,13 @@
+<projectDescription>
+  <name>maven-vfs-plugin</name>
+  <comment>Maven 2 plugin for synchronizing OpenCms VFS data with project sources.</comment>
+  <projects/>
+  <buildSpec>
+    <buildCommand>
+      <name>org.eclipse.jdt.core.javabuilder</name>
+    </buildCommand>
+  </buildSpec>
+  <natures>
+    <nature>org.eclipse.jdt.core.javanature</nature>
+  </natures>
+</projectDescription>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!-- see http://maven.apache.org/maven-1.x/plugins/changes/ -->
+<document>
+    <properties>
+        <title>Maven VFS Plugin Changes</title>
+        <author email="d.pleiss@comundus.com">Detlef Pleiß</author>
+        <author email="a.rodriguez@comundus.com">Adrian Rodriguez</author>
+    </properties>
+  
+    <body>
+    	<release version="7.5" date="2009-07-09">
+            <action dev=ks" type="update">updated to work with OpenCms 7.5</action>
+        </release>
+    	<release version="7.0.1f" date="2009-04-27">
+            <action dev="fn" type="fix">AbstractVfsMojo.getClassLoader() : Checks if WEB-INF/lib exists to give a proper error message </action>
+        </release>
+        <release version="7.0.1e" date="2009-03-17">
+            <action dev="ar" type="fix">AbstractVfsMojo.getClassLoader() : Checks if WEB-INF/lib exists to give a proper error message </action>
+        </release>
+        <release version="7.0.1d" date="2008-04-21">
+        </release>                
+        <release version="7.0.1c" date="2007-11-06">
+            <action dev="dp" type="add">added handling of Organizational Units</action>
+        </release>
+        <release version="7.0.1b" date="2007-07-31">
+            <action dev="dp" type="add">added WEB-INF/classes to the classpath; required for configuring fieldconfigurations in opencms-search.xml</action>
+        </release>
+        <release version="7.0.1" date="2007-07-16">
+            <action dev="dp" type="update">incorporated changes with OpenCms 7.0.1</action>
+            <action dev="dp" type="update">decoupled from special _opencmsshell version, now uses OpenCms in comundus version</action>
+        </release>
+        <release version="6.2.3" date="2007-04-11">
+            <action dev="dp" type="update">incorporated changes with OpenCms 6.2.3</action>
+        </release>
+        <release version="6.0.2b" date="2007-04-05">
+            <action dev="dp" type="update">added new style of module configuration with source file in opencms-module/opencms-module.xml</action>
+        </release>
+        <release version="1.0" date="2006-06-19">
+            <action dev="dp" type="add">initial release</action>
+        </release>
+    </body>
+</document>
