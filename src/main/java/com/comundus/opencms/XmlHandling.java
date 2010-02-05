@@ -13,6 +13,8 @@ import org.opencms.importexport.CmsImportExportManager;
 import org.opencms.main.OpenCms;
 
 import org.opencms.report.I_CmsReport;
+import org.opencms.security.CmsRole;
+import org.opencms.security.CmsRoleViolationException;
 
 import org.opencms.util.CmsXmlSaxWriter;
 
@@ -221,6 +223,13 @@ public class XmlHandling {
      * @return the CmsObject
      */
     protected final CmsObject getCms() {
+	
+	try {
+	    OpenCms.getRoleManager().checkRole(cms, CmsRole.ROOT_ADMIN);
+	} catch (CmsRoleViolationException e) {
+	    
+	    throw new RuntimeException("The user does not have administration permissions. Please check the username and password.",e);
+	}
         return this.cms;
     }
 

@@ -26,13 +26,16 @@ import org.opencms.file.CmsRequestContext;
 import org.opencms.file.CmsResource;
 import org.opencms.file.CmsResourceFilter;
 import org.opencms.file.types.I_CmsResourceType;
+import org.opencms.flex.CmsFlexCache;
 import org.opencms.i18n.CmsEncoder;
 import org.opencms.i18n.CmsMessageContainer;
 import org.opencms.importexport.CmsImportExportException;
 import org.opencms.importexport.CmsImportExportManager;
 import org.opencms.loader.CmsLoaderException;
 import org.opencms.main.CmOpenCmsShell;
+import org.opencms.main.CmsEvent;
 import org.opencms.main.CmsException;
+import org.opencms.main.I_CmsEventListener;
 import org.opencms.main.OpenCms;
 import org.opencms.relations.CmsRelation;
 import org.opencms.relations.CmsRelationFilter;
@@ -222,6 +225,7 @@ public class VfsSync extends XmlHandling {
      */
     public final void doTheSync(final List syncVFSPaths)
         throws CmsException {
+
         // create the sync list for this run
         this.syncList = this.readSyncList();
         this.newSyncList = new HashMap();
@@ -259,11 +263,18 @@ public class VfsSync extends XmlHandling {
         while (i.hasNext()) {
             // iterating thru RFS
             // possible action: importToVfs()
-            this.copyFromRfs((String) i.next());
+            
+            String vfsPath=(String) i.next();
+            this.copyFromRfs(vfsPath);
         }
 
         // write out the new sync list
         this.writeSyncList();
+
+        //Purge JSP repository. That will not work if the parameter webappDirectory is not pointing to
+        //the right directory in the Tomcat webapp. That means: it will not work with the default
+        //configuration
+        OpenCms.fireCmsEvent(new CmsEvent(I_CmsEventListener.EVENT_FLEX_PURGE_JSP_REPOSITORY, new HashMap(0)));
     }
 
     /**

@@ -125,8 +125,15 @@ public final class CmOpenCmsShell {
         // set the path to the WEB-INF folder
         // the other parameters are just dummies for servletPath and
         // webappName
-        this.opencmsCore.getSystemInfo()
-                        .init(this.webinfPath, "/opencms/*", null, "opencms", null/*, true*/);//Last parameter was removed in 7.5
+        CmsServletContainerSettings settings = new CmsServletContainerSettings(
+                this.webinfPath,                
+                "ROOT",
+                "/opencms/*",
+                null,
+                null);
+        this.opencmsCore.getSystemInfo().init(settings);        
+        //                .init(this.webinfPath, "/opencms/*", null, "opencms", null/*, true*/);//Last parameter was removed in 7.5
+        											//Long signature was removed in 7.5.2
 
         // now read the configuration properties
         final String propertyPath = this.opencmsCore.getSystemInfo()
