@@ -45,6 +45,10 @@ public class UserImportMojo extends AbstractVfsMojo {
      *             in case anything goes wrong
      */
     public final void execute() throws MojoExecutionException {
+    	if (this.isSkipVfs()){
+    		this.getLog().info("Skipping VFS plugin");
+    	}
+    	this.getLog().info("Executing UserImportMojo");
 //        ClassLoader originalClassLoader = Thread.currentThread()
 //                                                .getContextClassLoader();
 //        ClassLoader classloader = this.getClassLoader();
@@ -91,6 +95,7 @@ public class UserImportMojo extends AbstractVfsMojo {
                      "Failed to instantiate (abstract!)" +
                      UserImportMojo.SHELLCLASS, e);
 		} finally {
+			this.getLog().info("Finished UserImportMojo");
            // Thread.currentThread().setContextClassLoader(originalClassLoader);
         }
     }

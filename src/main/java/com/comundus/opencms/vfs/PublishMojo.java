@@ -40,6 +40,31 @@ public class PublishMojo extends AbstractVfsMojo {
     private List syncVFSPaths;
 
     /**
+     * List of VFS resources to synchronize.<br/>
+     * Folder resources allow exclude entries 
+     * <br/><br/>
+     * 
+     * Example Call:<pre>
+     * &lt;syncResources&gt;
+     *   &lt;syncResource&gt;
+     *     &lt;resource&gt;/system/workplace/&lt;/resource&gt;
+     *       &lt;excludes&gt;
+     *         &lt;exclude&gt;/system/workplace/tools/&lt;/exclude&gt;
+     *         &lt;exclude&gt;/system/workplace/resources/&lt;/exclude&gt;
+     *       &lt;/excludes&gt;                    	
+     *   &lt;/syncResource&gt;
+     *   &lt;syncResource&gt;
+     *     &lt;resource&gt;/system/workplace/tools/picture.gif&lt;/resource&gt;&lt;!-- This is a file --&gt;                    	
+     *   &lt;/syncResource&gt;                    	
+     * &lt;/syncResources&gt;
+     *</pre>
+     *
+     * @parameter
+     */
+    private List <SyncResource>syncResources;
+
+    
+    /**
      * Publishes resources in VFS.
      *
      * Only if VFS synchronization paths are configured; otherwise it's assumed
@@ -48,7 +73,11 @@ public class PublishMojo extends AbstractVfsMojo {
      * @throws MojoExecutionException in case anything goes wrong
      */
     public final void execute() throws MojoExecutionException {
-        if (this.syncVFSPaths == null) {
+    	if (this.isSkipVfs()){
+    		this.getLog().info("Skipping VFS plugin");
+    	}
+
+    	if (this.syncVFSPaths == null && this.syncResources==null) {
             this.getLog().info("Skipping non-vfs project");
 
             return; // it's ok, nothing to publish
@@ -70,7 +99,7 @@ public class PublishMojo extends AbstractVfsMojo {
 //                    PublishMojo.SHELLPARAMETERS);
         	VfsPublish publish = new VfsPublish();
         	publish.execute(
-                    getWebappDirectory(), this.syncVFSPaths, getAdminPassword()
+                    getWebappDirectory(), this.syncVFSPaths,this.syncResources, getAdminPassword()
                 );
         } catch (NoClassDefFoundError e) {
             throw new MojoExecutionException("Failed to load " +

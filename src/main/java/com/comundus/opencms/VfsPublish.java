@@ -11,6 +11,8 @@ import org.opencms.main.OpenCms;
 import org.opencms.report.CmsShellReport;
 import org.opencms.report.I_CmsReport;
 
+import com.comundus.opencms.vfs.SyncResource;
+
 
 /**
  * Publishes resources in VFS.
@@ -18,7 +20,7 @@ import org.opencms.report.I_CmsReport;
  */
 
 //(C) comundus GmbH, D-71332 WAIBLINGEN, www.comundus.com
-public class VfsPublish {
+public class VfsPublish extends XmlHandling{
     /** The CmsObject. */
     private CmsObject cms;
 
@@ -38,7 +40,7 @@ public class VfsPublish {
      *             if anything goes wrong
      */
     public final void execute(final String webappDirectory,
-        final List syncVFSPaths, final String adminPassword)
+        final List<String> syncVFSPaths,final List<SyncResource> syncResources, final String adminPassword)
         throws Exception {
         final String webinfdir = webappDirectory + File.separatorChar +
             "WEB-INF";
@@ -50,10 +52,12 @@ public class VfsPublish {
         this.report = new CmsShellReport(requestcontext.getLocale());
         requestcontext.setCurrentProject(this.cms.readProject("Offline"));
 
-        final Iterator i = syncVFSPaths.iterator();
+        List<SyncResource> iterableSyncResources=mergeSyncResourceLists(syncVFSPaths, syncResources);
 
-        while (i.hasNext()) {
-            final String sourcePathInVfs = (String) i.next();
+        for(SyncResource syncRes:iterableSyncResources){
+
+        	//The excludes are being ignored in this goal
+        	final String sourcePathInVfs = syncRes.getResource();
             OpenCms.getPublishManager()
                    .publishResource(this.cms, sourcePathInVfs, true, this.report);
         }

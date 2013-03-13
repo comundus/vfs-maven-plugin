@@ -3,23 +3,26 @@
     <parent>
         <groupId>com.comundus</groupId>
         <artifactId>comundus</artifactId>
-        <version>1</version>
+        <version>1.1</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.comundus.maven</groupId>
-    <artifactId>maven-vfs-plugin</artifactId>
+    <artifactId>vfs-maven-plugin</artifactId>
     <packaging>maven-plugin</packaging>
-    <version>7.5.2</version>
-    <name>Maven VFS Plugin</name>
+    <version>8.5.1</version>
+    <name>VFS Maven Plugin</name>
     <url>http://opencms-maven.comundus.com</url>
-    <description>Maven 2 plugin for synchronizing OpenCms VFS data with project sources.</description>
+    <description>Maven 2/3 plugin for synchronizing OpenCms VFS data with project sources.</description>
     <inceptionYear>2006</inceptionYear>
+    <prerequisites>
+	<maven>2.2.1</maven>
+    </prerequisites>
     
     <developers>
         <developer>
-            <id>dp</id>
-            <name>Detlef Pleiﬂ</name>
-            <email>d.pleiss@comundus.com</email>
+            <id>ar</id>
+            <name>Adrian Rodriguez</name>
+            <email>a.rodriguez@comundus.com</email>
             <url/>
             <organization>comundus GmbH</organization>
             <organizationUrl>http://www.comundus.com</organizationUrl>
@@ -29,19 +32,40 @@
             <timezone>1</timezone>
             <properties/>
         </developer>
-    </developers>
-    
+        <developer>
+            <id>dp</id>
+            <name>Detlef Pleiﬂ</name>
+            <email>d.pleiss@comundus.com</email>
+            <url/>
+            <organization>comundus GmbH</organization>
+            <organizationUrl>http://www.comundus.com</organizationUrl>
+            <roles>
+                <role>developer</role>
+            </roles>
+            <timezone>1</timezone>
+            <properties/>
+        </developer>
+    </developers>   
     <scm>
-        <developerConnection>scm:svn:https://mavplugocms.svn.sourceforge.net/svnroot/mavplugocms/maven-vfs-plugin/trunk/</developerConnection>
-        <url>https://mavplugocms.svn.sourceforge.net/svnroot/mavplugocms/maven-vfs-plugin/trunk/</url>
-        <tag/>
-    </scm>
-    
+        <connection>scm:git:git@github.com:comundus/vfs-maven-plugin.git</connection>
+        <developerConnection>scm:git:git@github.com:comundus/vfs-maven-plugin.git</developerConnection>
+        <url>http://github.com/comundus/vfs-maven-plugin</url>
+    </scm>    
     <build>
         <plugins>
-			<plugin>
-        		<groupId>org.apache.maven.plugins</groupId>
-        		<artifactId>maven-source-plugin</artifactId>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.0</version>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                 </configuration>
+             </plugin>
+             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+       		<version>2.2.1</version>
                 <executions>
                     <execution>
                         <goals>
@@ -51,6 +75,31 @@
                 </executions>
       		</plugin>
         </plugins>
+	    <pluginManagement>
+	        <plugins>
+				<plugin>
+				  <groupId>org.apache.maven.plugins</groupId>
+				  <artifactId>maven-site-plugin</artifactId>
+				  <!-- build is not working with maven 3.x and maven-site-plugin 3.2 -->
+				  <version>2.3</version>
+				</plugin>
+	            <plugin>
+	                <groupId>org.apache.maven.plugins</groupId>
+	                <artifactId>maven-checkstyle-plugin</artifactId>
+	                <version>2.9.1</version>
+	            </plugin>
+	            <plugin>
+	                <groupId>org.apache.maven.plugins</groupId>
+	                <artifactId>maven-plugin-plugin</artifactId>
+	                <version>3.2</version>
+	            </plugin>
+	            <plugin>
+	                <groupId>org.apache.maven.plugins</groupId>
+		                <artifactId>maven-pmd-plugin</artifactId>
+		                <version>2.7.1</version>
+		        </plugin>
+			</plugins>
+	    </pluginManagement>
     </build>
 
     <dependencies>
@@ -76,12 +125,26 @@
         </dependency>
         <dependency>
         	<groupId>org.opencms</groupId>
-        	<artifactId>opencms</artifactId>
-        	<version>7.5.2</version>
+        	<artifactId>opencms-core</artifactId>
+        	<version>8.5.1</version>
         </dependency>
+        <dependency>
+		<groupId>junit</groupId>
+		<artifactId>junit</artifactId>
+		<version>3.8.2</version>
+		<scope>test</scope>
+	</dependency>
     </dependencies>
     <reporting>
         <plugins>
+			<plugin>
+			  <groupId>org.apache.maven.plugins</groupId>
+			  <artifactId>maven-site-plugin</artifactId>
+			</plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-plugin-plugin</artifactId>

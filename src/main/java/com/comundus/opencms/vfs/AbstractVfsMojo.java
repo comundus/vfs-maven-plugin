@@ -117,6 +117,14 @@ public abstract class AbstractVfsMojo extends AbstractMojo {
     private List remoteArtifactRepositories;
 
     /**
+     * true if the goals of this plugin have to be skipped
+     * May be set with -DskipVfs=true
+     *
+     * @parameter expression="${skipVfs}" default-value="false" 
+     */
+    private boolean skipVfs;
+
+    /**
      *
      * Singleton-like optimization to only get the ClassLoader once, prevents
      * OutOfMemoryExceptions from PermGenSpace running out, from the
@@ -216,6 +224,13 @@ public abstract class AbstractVfsMojo extends AbstractMojo {
         return this.adminPassword;
     }
 
+    /** 
+     * @return true if the goals of this plugin must be skipped
+     */
+    public final boolean isSkipVfs() {
+        return this.skipVfs;
+    }
+    
     /**
     * @see org.apache.maven.plugin.Mojo
     * @throws MojoExecutionException An exception occuring during the execution of a plugin

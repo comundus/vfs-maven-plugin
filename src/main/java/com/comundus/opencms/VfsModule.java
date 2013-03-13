@@ -18,6 +18,8 @@ import org.opencms.main.CmsException;
 import org.opencms.main.OpenCms;
 import org.opencms.module.CmsModule;
 import org.opencms.module.CmsModuleXmlHandler;
+import org.opencms.report.CmsShellReport;
+import org.opencms.report.I_CmsReport;
 import org.opencms.security.CmsSecurityException;
 import org.opencms.xml.CmsXmlErrorHandler;
 import org.xml.sax.SAXException;
@@ -33,6 +35,8 @@ public class VfsModule {
     private CmsObject cms;
 
     private String moduleVersion;
+
+	private I_CmsReport report;
     
     /**
      * Installs a module description in the target OpenCms. Module description
@@ -64,13 +68,17 @@ public class VfsModule {
             "WEB-INF";
         final CmOpenCmsShell cmsshell = CmOpenCmsShell.getInstance(webinfdir,
                 "Admin", adminPassword);
-this.moduleVersion = moduleVersion;
+
+        this.moduleVersion = moduleVersion;
+        
         if (cmsshell != null) {
             this.cms = cmsshell.getCmsObject();
 
             final CmsRequestContext requestcontext = this.cms.getRequestContext();
             requestcontext.setCurrentProject(this.cms.readProject("Offline"));
-
+            
+            this.setReport(new CmsShellReport(requestcontext.getLocale()));
+            
             // code taken from org.opencms.module.CmsModuleImportExportHandler (readModuleFromImport)
             final Digester digester = new Digester();
             digester.setUseContextClassLoader(true);
@@ -79,7 +87,12 @@ this.moduleVersion = moduleVersion;
             digester.setErrorHandler(new CmsXmlErrorHandler());
             digester.push(this);
             CmsModuleXmlHandler.addXmlDigesterRules(digester);
+            
+            simpleReport("Parsing module file: "+moduleSourcePath+". Version: "+moduleVersion);            
             digester.parse(new FileInputStream(new File(moduleSourcePath)));
+            simpleReport("End of parsing module file: "+moduleSourcePath+". Version: "+moduleVersion);
+        }else{
+        	System.err.println("[WARN]VfsModule.execute(): CmsShell not available");
         }
     }
 
@@ -94,14 +107,16 @@ this.moduleVersion = moduleVersion;
         throws CmsConfigurationException, CmsSecurityException {
         // code taken from org.opencms.module.CmsModuleImportExportHandler (importModule)
         final CmsModule importedModule = moduleHandler.getModule();
-
+        
+        simpleReport("Module found: "+importedModule.getName());
+        
         // check if the module is already installed
         if (OpenCms.getModuleManager().hasModule(importedModule.getName())) {
             throw new CmsConfigurationException(org.opencms.module.Messages.get()
                                                                            .container(org.opencms.module.Messages.ERR_MOD_ALREADY_INSTALLED_1,
                     importedModule.getName()));
         }
-
+        simpleReport("Module is not installed, going on: "+importedModule.getName());
         /*/ check the module dependencies - DET: we don't do that during Maven style system setup
         List dependencies = OpenCms.getModuleManager().checkDependencies(
             importedModule,
@@ -174,9 +189,9 @@ this.moduleVersion = moduleVersion;
         if(this.moduleVersion != null) {
             importedModule.getVersion().setVersion(this.moduleVersion);
         }
-
+        simpleReport("Adding Module: "+importedModule.getName());
         OpenCms.getModuleManager().addModule(this.cms, importedModule);
-
+        simpleReport("Module added: "+importedModule.getName());
         // reinitialize the resource manager with additional module
         // resourcetypes if necessary
         if (importedModule.getResourceTypes() != Collections.EMPTY_LIST) {
@@ -188,5 +203,49 @@ this.moduleVersion = moduleVersion;
         if (importedModule.getExplorerTypes() != Collections.EMPTY_LIST) {
             OpenCms.getWorkplaceManager().addExplorerTypeSettings(importedModule);
         }
+        
+        
+        //Recheck if the module was succesfully imported
+        if (!OpenCms.getModuleManager().hasModule(importedModule.getName())) {
+        	report("[WARN] Module " +importedModule.getName()+" has not been imported",I_CmsReport.FORMAT_WARNING);
+        }
     }
+    
+    protected void simpleReport(String msg) {
+
+    	report("[DEBUG] "+msg,I_CmsReport.FORMAT_DEFAULT);
+	}
+    
+    /**
+     * 
+     * @param msg
+     * @param format
+     */
+    protected void report(String msg, int format) {
+		this.getReport()
+			.println(org.opencms.report.Messages.get()
+					.container(org.opencms.report.Messages.RPT_ARGUMENT_1,
+							msg,format));		
+	}
+
+    /**
+     * gets the Cms Report.
+     * @return the Cms Report
+     */
+    public final I_CmsReport getReport() {
+        return this.report;
+    }
+
+    /**
+     * Set the report to use for synchronisation.
+     *
+     * Used when OpenCms integrated synchronisation is called.
+     *
+     * @param preport
+     *            the report to use
+     */
+    public final void setReport(final I_CmsReport preport) {
+        this.report = preport;
+    }
+
 }

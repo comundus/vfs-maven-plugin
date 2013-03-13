@@ -65,6 +65,10 @@ public class ModuleMojo extends AbstractVfsMojo {
 //            Object o = constr.newInstance(new Object[] {  });
 //            Method main = invokeMeClass.getMethod("execute",
 //                    ModuleMojo.SHELLPARAMETERS);
+        	if (this.isSkipVfs()){
+        		this.getLog().info("Skipping VFS plugin");
+        	}
+
         	VfsModule module = new VfsModule();
             module.execute(
                     getWebappDirectory(), getAdminPassword(),
@@ -75,13 +79,13 @@ public class ModuleMojo extends AbstractVfsMojo {
                 ModuleMojo.SHELLCLASS, e);
         } catch (IOException e) {
         	throw new MojoExecutionException(
-                    "Failed to instantiate (abstract!)" + ModuleMojo.SHELLCLASS, e);
+                    "Failed to instantiate " + ModuleMojo.SHELLCLASS, e);
 		} catch (CmsException e) {
 			throw new MojoExecutionException(
-	                "Failed to instantiate (abstract!)" + ModuleMojo.SHELLCLASS, e);
+	                "Failed to instantiate " + ModuleMojo.SHELLCLASS, e);
 		} catch (SAXException e) {
 			throw new MojoExecutionException(
-	                "Failed to instantiate (abstract!)" + ModuleMojo.SHELLCLASS, e);
+	                "Failed to instantiate " + ModuleMojo.SHELLCLASS, e);
 		} finally {
             // Thread.currentThread().setContextClassLoader(originalClassLoader);
         }

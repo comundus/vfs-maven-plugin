@@ -36,6 +36,10 @@ public class OrgunitsMojo extends AbstractVfsMojo {
      *             in case anything goes wrong
      */
     public final void execute() throws MojoExecutionException {
+    	if (this.isSkipVfs()){
+    		this.getLog().info("Skipping VFS plugin");
+    	}
+
 //        ClassLoader originalClassLoader = Thread.currentThread()
 //                                                .getContextClassLoader();
 //        ClassLoader classloader = this.getClassLoader();

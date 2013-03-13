@@ -55,6 +55,7 @@ public class VfsSetup {
     public final void execute(final String webappDirectory,
         final String opencmsmoduleSourceDirectory, final List opencmsModules,
         final String adminPassword) throws Exception {
+
         final String webinfdir = webappDirectory + File.separatorChar +
             "WEB-INF";
         final CmOpenCmsShell cmsshell = CmOpenCmsShell.getInstance(webinfdir,
@@ -64,7 +65,7 @@ public class VfsSetup {
         //final CmsImportExportManager impexpmanager = OpenCms.getImportExportManager();
         System.out.println("OpenCms: initial setup");
         this.executeSetupTxt(cmsobject, requestcontext /*, impexpmanager*/);
-
+        System.out.println("OpenCms: executeSetupTxt finished");
         if ((adminPassword != null) && (adminPassword.length() > 0)) {
             System.out.println("OpenCms: setting Admin password");
             cmsobject.setPassword(VfsSetup.ADMIN_LOGIN, adminPassword);
@@ -192,10 +193,15 @@ public class VfsSetup {
         // unlockCurrentProject
         cmsobject.unlockProject(cmsobject.getRequestContext().currentProject()
                                          .getUuid());
+        
+        System.out.println("Project is going to be published");
         // publishProjectAndWait
         OpenCms.getPublishManager().publishProject(cmsobject);
-        OpenCms.getPublishManager().waitWhileRunning();
+        System.out.println("Publish sent. Waiting.");
+       	OpenCms.getPublishManager().waitWhileRunning();
+        System.out.println("Publish finished.");
 
+        System.out.println("Creating Offline project.");
         // # Create the default "Offline" project
         // createDefaultProject "Offline" "The Offline Project"
         // code taken from org.opencms.main.CmsShellCommands (createDefaultProject)
@@ -206,7 +212,7 @@ public class VfsSetup {
                 CmsProject.PROJECT_TYPE_NORMAL);
         requestcontext.setCurrentProject(project);
         cmsobject.copyResourceToProject("/");
-
+        System.out.println("Created Offline project.");
         // setSiteRoot "/sites/default/"
         // we don't need that
         // requestcontext.setSiteRoot("/sites/default/");

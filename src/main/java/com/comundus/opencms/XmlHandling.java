@@ -20,11 +20,15 @@ import org.opencms.util.CmsXmlSaxWriter;
 
 import org.xml.sax.SAXException;
 
+import com.comundus.opencms.vfs.SyncResource;
+
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -312,6 +316,44 @@ public class XmlHandling {
         } catch (Exception e) {
             return null;
         }
+    }
+    
+    protected void simpleReport(String msg) {
+
+    	report("[DEBUG] "+msg,I_CmsReport.FORMAT_DEFAULT);
+	}
+
+    /**
+     * 
+     * @param msg
+     * @param format
+     */
+    protected void report(String msg, int format) {
+		this.getReport()
+			.println(org.opencms.report.Messages.get()
+					.container(org.opencms.report.Messages.RPT_ARGUMENT_1,
+							msg,format));		
+	}
+
+
+    /**
+     * 
+     * @param syncVFSPaths
+     * @param syncResources
+     * @return
+     */
+    protected List<SyncResource> mergeSyncResourceLists(List<String> syncVFSPaths,List<SyncResource> syncResources){
+    
+    	
+        if(syncResources==null){
+        	syncResources=new ArrayList<SyncResource>();
+        }
+        if(syncVFSPaths!=null){
+        	for(String syncVfsPath:syncVFSPaths){
+        		syncResources.add(new SyncResource(syncVfsPath));
+        	}
+        }
+        return syncResources;
     }
 
 }

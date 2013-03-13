@@ -11,7 +11,11 @@ import org.opencms.synchronize.CmsSynchronizeSettings;
 import org.opencms.synchronize.I_CmsSynchronize;
 import org.opencms.synchronize.Messages;
 
+import com.comundus.opencms.vfs.SyncResource;
+
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -86,7 +90,12 @@ public class CmsSynchronizeMaven implements I_CmsSynchronize {
             mysync.setMetadataPathInRfs(destinationPathInRfs + "-metadata");
             mysync.setCms(this.cms);
             mysync.setReport(this.report);
-            mysync.doTheSync(settings.getSourceListInVfs());
+            
+            List<SyncResource> syncResources=new ArrayList<SyncResource>();
+            for(String resourcePath:settings.getSourceListInVfs()){
+            	syncResources.add(new SyncResource(resourcePath));
+            }
+			mysync.doTheSync(syncResources);
         }
     }
 }

@@ -2,6 +2,7 @@ package org.opencms.main;
 
 import org.apache.commons.collections.ExtendedProperties;
 
+import org.opencms.configuration.CmsParameterConfiguration;
 import org.opencms.db.CmsLoginMessage;
 
 import org.opencms.file.CmsObject;
@@ -10,7 +11,7 @@ import org.opencms.main.CmsException;
 import org.opencms.main.OpenCms;
 import org.opencms.main.OpenCmsCore;
 
-import org.opencms.util.CmsPropertyUtils;
+//import org.opencms.util.CmsPropertyUtils;
 
 import java.io.IOException;
 
@@ -138,7 +139,8 @@ public final class CmOpenCmsShell {
         // now read the configuration properties
         final String propertyPath = this.opencmsCore.getSystemInfo()
                                                     .getConfigurationFileRfsPath();
-        final ExtendedProperties configuration = CmsPropertyUtils.loadProperties(propertyPath);
+        //final ExtendedProperties configuration = CmsPropertyUtils.loadProperties(propertyPath);
+        final CmsParameterConfiguration configuration=new CmsParameterConfiguration(propertyPath);
         // now upgrade to runlevel 2
         // requires servlet-api indirectly
         // this adds some rows to an empty database:

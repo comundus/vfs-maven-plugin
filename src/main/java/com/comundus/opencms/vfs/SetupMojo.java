@@ -55,6 +55,12 @@ public class SetupMojo extends AbstractVfsMojo {
      * @throws MojoExecutionException in case anything goes wrong
      */
     public final void execute() throws MojoExecutionException {
+    	if (this.isSkipVfs()){
+    		this.getLog().info("Skipping VFS plugin");
+    	}
+    	
+    	this.getLog().info("Executing SetupMojo");
+    	
         ClassLoader originalClassLoader = Thread.currentThread()
                                                 .getContextClassLoader();
         // ClassLoader classloader = this.getClassLoader();
@@ -98,6 +104,7 @@ public class SetupMojo extends AbstractVfsMojo {
         	throw new MojoExecutionException(
                     "Failed to instantiate (abstract!)" + SetupMojo.SHELLCLASS, e);
 		} finally {
+			this.getLog().info("Finished SetupMojo");
             Thread.currentThread().setContextClassLoader(originalClassLoader);
         }
     }
