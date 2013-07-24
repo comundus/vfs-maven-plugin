@@ -9,6 +9,6 @@ To build `vfs-maven-plugin` following repositories have to be defined in your Ma
 
     <repository>
         <id>comundus-github</id>
-        <url>https://github.com/comundus/maven2-repository/raw/master</url>
+        <url>https://raw.github.com/comundus/maven2-repository/master</url>
     </repository>
     

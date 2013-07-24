@@ -28,7 +28,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -335,25 +338,26 @@ public class XmlHandling {
 							msg,format));		
 	}
 
-
     /**
-     * 
+     * Merges the lists giving preference to the elements of <code>syncResources</code>
      * @param syncVFSPaths
      * @param syncResources
      * @return
      */
     protected List<SyncResource> mergeSyncResourceLists(List<String> syncVFSPaths,List<SyncResource> syncResources){
-    
-    	
-        if(syncResources==null){
-        	syncResources=new ArrayList<SyncResource>();
-        }
-        if(syncVFSPaths!=null){
+        	    	
+    	Map<String,SyncResource> mergedList = new LinkedHashMap<String, SyncResource>();
+        if (syncVFSPaths != null) {
         	for(String syncVfsPath:syncVFSPaths){
-        		syncResources.add(new SyncResource(syncVfsPath));
+        		mergedList.put(syncVfsPath, new SyncResource(syncVfsPath));
         	}
         }
-        return syncResources;
+        if (syncResources != null) {
+        	for (SyncResource syncResource:syncResources) {
+        		mergedList.put(syncResource.getResource(), syncResource);
+        	}
+        }
+        return new ArrayList<SyncResource>(mergedList.values());
     }
 
 }

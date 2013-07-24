@@ -314,7 +314,7 @@ public class VfsSync extends XmlHandling {
             return;
         }
         
-        if(fsFile.getName().startsWith(".")){//With .gitignore in mind
+        if(fsFile.getName().startsWith(".git")){
         	return;
         }
         

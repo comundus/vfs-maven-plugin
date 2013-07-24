@@ -47,6 +47,7 @@ public class UserImportMojo extends AbstractVfsMojo {
     public final void execute() throws MojoExecutionException {
     	if (this.isSkipVfs()){
     		this.getLog().info("Skipping VFS plugin");
+    		return;
     	}
     	this.getLog().info("Executing UserImportMojo");
 //        ClassLoader originalClassLoader = Thread.currentThread()

@@ -115,7 +115,7 @@ public class VfsOrgunits extends XmlHandling {
 	                    new CmsProperty(ORGUNIT_PROPERTY_PROJECTID,
 	                        project.getUuid().toString(), null));
 	                // as in addResourceToOrganizationalUnit
-	                // wir müssen uns alle Relations für den OU-Folder holen
+	                // we have to fetch all the relations for the OU-folder
 	                List relations = this.getCms()
 	                                     .getRelationsForResource(res.getRootPath(),
 	                        CmsRelationFilter.TARGETS);

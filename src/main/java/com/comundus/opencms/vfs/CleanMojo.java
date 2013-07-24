@@ -45,6 +45,7 @@ public class CleanMojo extends AbstractVfsMojo {
     	
     	if (this.isSkipVfs()){
     		this.getLog().info("Skipping VFS plugin");
+    		return;
     	}
         if (this.syncVFSPaths == null) {
             this.getLog().info("Skipping non-vfs project");

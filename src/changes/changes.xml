@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!-- see http://maven.apache.org/maven-1.x/plugins/changes/ -->
+<!-- Action types: add, fix, remove, update -->
 <document>
     <properties>
         <title>Maven VFS Plugin Changes</title>
@@ -7,7 +8,18 @@
     </properties>
   
     <body>
-    
+        <release version="8.5.2" date="2013-07-24" description="Version 8.5.2">
+	       	<action dev="ar" type="update">updated to new OpenCms version which is 8.5.2</action>
+	       	<action dev="ar" type="update">Using GitHub as main VCS</action>
+	       	<action dev="ar" type="update">Using new comundus defaults: comundus-parent 1.2</action>		
+	</release>
+        <release version="8.5.1b" date="2013-07-19" description="Fixed regression">
+        	<action dev="ar" type="fix">Resources starting with dot are imported. Resources starting with '.git' and its contents are not imported</action>
+        </release>            
+        <release version="8.5.1a" date="2013-07-02" description="Fixes">
+        	<action dev="ar" type="update">Merging syncVfsPaths and syncResources instead of joining them</action>
+        	<action dev="ar" type="fix">Honor skipVfs parameter in some missing goals</action>
+        </release>        
         <release version="8.5.1" date="2013-02-11" description="Version 8.5.1">
         	<action dev="ks" type="update">updated to new OpenCms version which is 8.5.1</action>
         </release>    

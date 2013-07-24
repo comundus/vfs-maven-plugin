@@ -75,6 +75,7 @@ public class PublishMojo extends AbstractVfsMojo {
     public final void execute() throws MojoExecutionException {
     	if (this.isSkipVfs()){
     		this.getLog().info("Skipping VFS plugin");
+    		return;
     	}
 
     	if (this.syncVFSPaths == null && this.syncResources==null) {

@@ -67,6 +67,7 @@ public class ModuleMojo extends AbstractVfsMojo {
 //                    ModuleMojo.SHELLPARAMETERS);
         	if (this.isSkipVfs()){
         		this.getLog().info("Skipping VFS plugin");
+        		return;
         	}
 
         	VfsModule module = new VfsModule();
