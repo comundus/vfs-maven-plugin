@@ -27,7 +27,7 @@ import org.opencms.file.CmsRequestContext;
 import org.opencms.file.CmsResource;
 import org.opencms.file.CmsResourceFilter;
 import org.opencms.file.types.I_CmsResourceType;
-import org.opencms.flex.CmsFlexCache;
+
 import org.opencms.i18n.CmsEncoder;
 import org.opencms.i18n.CmsMessageContainer;
 import org.opencms.importexport.CmsImportExportException;
@@ -268,7 +268,7 @@ public class VfsSync extends XmlHandling {
             final String sourcePath = this.destinationPathInRfs +
             	vfsPath.getResource().replace('/', File.separatorChar);
 
-        	report("---- Synchronizing From RFS("+sourcePath+") into VFS ("+vfsPath.getResource()+")", I_CmsReport.FORMAT_HEADLINE);
+            report("---- Synchronizing From RFS("+sourcePath+") into VFS ("+vfsPath.getResource()+")", I_CmsReport.FORMAT_HEADLINE);
             // iterating thru RFS
             // possible action: importToVfs()            
             this.copyFromRfs(vfsPath);
@@ -299,23 +299,8 @@ public class VfsSync extends XmlHandling {
         File[] res;
         final File fsFile = this.getFileInRfs(syncResource.getResource());
 
-        if (!fsFile.exists()) {
-        	return;
-        }
-        if (fsFile.isHidden()) { // don't balk at .svn
+        if(isIgnorableFile(fsFile)){
             return;
-        }
-
-        if (fsFile.getAbsolutePath().endsWith(File.separator + ".svn")) { // Det did see not hidden .svn folders in his life ...
-            return;
-        }
-
-        if (fsFile.getAbsolutePath().endsWith(File.separator + "CVS")) {
-            return;
-        }
-        
-        if(fsFile.getName().startsWith(".git")){
-        	return;
         }
         
         boolean doRecursion=true;
@@ -399,21 +384,17 @@ public class VfsSync extends XmlHandling {
 
         // now loop through all resources
         for (int i = 0; i < res.length; i++) {
-        	if (res[i].isHidden()) { // don't balk at Thumbs.db
-
-        		continue;
+        	if (isIgnorableFile(res[i])) {
+        	    continue;
         	}
 
         	// get the relative filename
         	String resname = res[i].getAbsolutePath();
 
-        	if (resname.endsWith(File.separator + ".cvsignore")) {
-        		continue;
-        	}
-			if(resourceIsInExcludesArray(this.getFilenameInVfs(res[i]), syncResource.getExcludes())){
-            	//simpleReport("Not checking "+resname+" in copyFromRfs because it is in the excludes list");
-            	continue;
-			}
+		if(resourceIsInExcludesArray(this.getFilenameInVfs(res[i]), syncResource.getExcludes())){
+		    //simpleReport("Not checking "+resname+" in copyFromRfs because it is in the excludes list");
+		    continue;
+		}
 
         	if (!this.removeRfsList.contains(resname)) {
         		// do not reimport deletables
@@ -1030,8 +1011,7 @@ public class VfsSync extends XmlHandling {
                 this.removeRfsList.add(abspath);
 
                 // do not reimport deletables
-                if ((!res[i].isHidden()) &&
-                        (!abspath.endsWith(File.separator + ".cvsignore"))) {
+                if (!isIgnorableFile(res[i])) {
                     this.getReport()
                         .println(org.opencms.report.Messages.get()
                                                             .container(org.opencms.report.Messages.RPT_ARGUMENT_1,
@@ -2830,5 +2810,29 @@ public class VfsSync extends XmlHandling {
      */
     public final void setMetadataPathInRfs(final String pathInRfs) {
         this.metadataPathInRfs = pathInRfs;
+    }
+    
+    private boolean isIgnorableFile(File file){
+	if (file == null) {
+	    return true;
+	}
+        if (!file.exists()) {
+            return true;
+        }
+        if (file.isHidden()) { // don't balk at .svn
+            return true;
+        }
+
+        if (file.getAbsolutePath().endsWith(File.separator + ".svn")) { // Det did see not hidden .svn folders in his life ...
+            return true;
+        }
+
+        if (file.getAbsolutePath().endsWith(File.separator + "CVS")) {
+            return true;
+        }    
+        if(file.getName().startsWith(".git")){
+            return true;
+        }
+        return false;
     }
 }
