@@ -75,7 +75,7 @@
              <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
-       		<version>2.2.1</version>
+	       		<version>2.2.1</version>
                 <executions>
                     <execution>
                         <goals>
@@ -84,6 +84,20 @@
                     </execution>
                 </executions>
       		</plugin>
+      		<!-- 
+   			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-docck-plugin</artifactId>
+				<version>1.0</version>
+				<executions>
+			          <execution>
+			            <goals>
+			              <goal>check</goal>
+			            </goals>
+			          </execution>
+		        </executions>
+			</plugin>
+			 -->
         </plugins>
 	    <pluginManagement>
 	        <plugins>
@@ -94,7 +108,38 @@
 	                <version>3.2</version>
 	            </plugin>
 
-			</plugins>
+	            <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+	            <plugin>
+	            	<groupId>org.eclipse.m2e</groupId>
+	            	<artifactId>lifecycle-mapping</artifactId>
+	            	<version>1.0.0</version>
+	            	<configuration>
+	            		<lifecycleMappingMetadata>
+	            			<pluginExecutions>
+	            				<pluginExecution>
+	            					<pluginExecutionFilter>
+	            						<groupId>
+	            							org.apache.maven.plugins
+	            						</groupId>
+	            						<artifactId>
+	            							maven-docck-plugin
+	            						</artifactId>
+	            						<versionRange>
+	            							[1.0,)
+	            						</versionRange>
+	            						<goals>
+	            							<goal>check</goal>
+	            						</goals>
+	            					</pluginExecutionFilter>
+	            					<action>
+	            						<ignore></ignore>
+	            					</action>
+	            				</pluginExecution>
+	            			</pluginExecutions>
+	            		</lifecycleMappingMetadata>
+	            	</configuration>
+	            </plugin>
+	        </plugins>
 	    </pluginManagement>
     </build>
 
@@ -143,10 +188,11 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-	                <artifactId>maven-pmd-plugin</artifactId>
+                <artifactId>maven-pmd-plugin</artifactId>
+	            <version>3.0.1</version>
                 <configuration>
                     <rulesets>
-                        <ruleset>${basedir}/src/main/pmd/pmd.xml</ruleset>
+                        <ruleset>${basedir}/../parent/src/main/pmd/pmd.xml</ruleset>
                     </rulesets>
                 </configuration>
                 <reportSets>
