@@ -101,7 +101,7 @@ public abstract class AbstractVfsMojo extends AbstractMojo {
     /**
      * Local maven repository.
      *
-     * @parameter expression="${localRepository}"
+     * @parameter property="localRepository"
      * @required
      * @readonly
      */
@@ -110,7 +110,7 @@ public abstract class AbstractVfsMojo extends AbstractMojo {
     /**
      * Remote repositories which will be searched for Servlet and JSP API.
      *
-     * @parameter expression="${project.remoteArtifactRepositories}"
+     * @parameter property="project.remoteArtifactRepositories"
      * @required
      * @readonly
      */
@@ -120,7 +120,7 @@ public abstract class AbstractVfsMojo extends AbstractMojo {
      * true if the goals of this plugin have to be skipped
      * May be set with -DskipVfs=true
      *
-     * @parameter expression="${skipVfs}" default-value="false" 
+     * @parameter property="skipVfs" default-value="false" 
      */
     private boolean skipVfs;
 

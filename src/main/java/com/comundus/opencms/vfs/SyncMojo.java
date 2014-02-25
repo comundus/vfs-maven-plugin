@@ -1,3 +1,4 @@
+//(C) comundus GmbH, D-71332 WAIBLINGEN, www.comundus.com
 package com.comundus.opencms.vfs;
 
 import java.lang.reflect.InvocationTargetException;
@@ -7,7 +8,6 @@ import org.apache.maven.plugin.MojoExecutionException;
 
 import com.comundus.opencms.VfsSync;
 
-
 /**
  * A Maven2 plugin Goal to synchronise VFS content and metadata with source
  * folder(s).
@@ -15,7 +15,6 @@ import com.comundus.opencms.VfsSync;
  * @goal sync
  */
 
-//(C) comundus GmbH, D-71332 WAIBLINGEN, www.comundus.com
 public class SyncMojo extends AbstractVfsMojo {
     /**
      * The _opencmsshell class to instantiate within our custom ClassLoader.
@@ -58,9 +57,9 @@ public class SyncMojo extends AbstractVfsMojo {
 
     /**
      * List of VFS resources to synchronize.<br/>
-     * Folder resources allow exclude entries 
+     * Folder resources allow exclude entries
      * <br/><br/>
-     * 
+     *
      * Example Call:<pre>
      * &lt;syncResources&gt;
      *   &lt;syncResource&gt;
@@ -68,11 +67,11 @@ public class SyncMojo extends AbstractVfsMojo {
      *       &lt;excludes&gt;
      *         &lt;exclude&gt;/system/workplace/tools/&lt;/exclude&gt;
      *         &lt;exclude&gt;/system/workplace/resources/&lt;/exclude&gt;
-     *       &lt;/excludes&gt;                    	
+     *       &lt;/excludes&gt;
      *   &lt;/syncResource&gt;
      *   &lt;syncResource&gt;
-     *     &lt;resource&gt;/system/workplace/tools/picture.gif&lt;/resource&gt;&lt;!-- This is a file --&gt;                    	
-     *   &lt;/syncResource&gt;                    	
+     *     &lt;resource&gt;/system/workplace/tools/picture.gif&lt;/resource&gt;&lt;!-- This is a file --&gt;
+     *   &lt;/syncResource&gt;
      * &lt;/syncResources&gt;
      *</pre>
      *
@@ -90,12 +89,12 @@ public class SyncMojo extends AbstractVfsMojo {
      *             in case anything goes wrong
      */
     public final void execute() throws MojoExecutionException {
-    	if (this.isSkipVfs()){
+    	if (this.isSkipVfs()) {
     		this.getLog().info("Skipping VFS plugin");
     		return;
     	}
 
-        if (this.syncVFSPaths == null && this.syncResources==null) {
+        if (this.syncVFSPaths == null && this.syncResources == null) {
             this.getLog().info("Skipping non-vfs project");
 
             return; // it's ok, nothing to sync
@@ -115,7 +114,7 @@ public class SyncMojo extends AbstractVfsMojo {
 //            Object o = constr.newInstance(new Object[] {  });
 //            Method main = invokeMeClass.getMethod(AbstractVfsMojo.SHELLMETHOD,
 //                    SyncMojo.SHELLPARAMETER);
-        	if(getLog().isDebugEnabled()){
+        	if (getLog().isDebugEnabled()) {
         		printSyncResources();
         	}
         	VfsSync sync = new VfsSync();
@@ -153,28 +152,28 @@ public class SyncMojo extends AbstractVfsMojo {
 
     private void printSyncResources() {
 
-	if(this.syncResources != null){
-	    getLog().debug("SyncResources: "+this.syncResources.size()+" elements");
-	    for(SyncResource res:(List<SyncResource>)this.syncResources){
-		String resTxt="  Resource: "+res;
-		if(res.getExcludes()!=null && res.getExcludes().length>0){
-		    resTxt+="(";
-		    for(String exclude:res.getExcludes()){
-			resTxt+=("-"+exclude+" ");				
+	if (this.syncResources != null) {
+	    getLog().debug("SyncResources: " + this.syncResources.size() + " elements");
+	    for (SyncResource res:(List<SyncResource>) this.syncResources) {
+		String resTxt = "  Resource: " + res;
+		if (res.getExcludes() != null && res.getExcludes().length > 0) {
+		    resTxt += "(";
+		    for (String exclude:res.getExcludes()) {
+			resTxt += ("-" + exclude + " ");
 		    }
-		    resTxt+=")";
+		    resTxt += ")";
 		}
 		getLog().debug(resTxt);
-	    }		
-	}else{
+	    }
+	} else {
 	    getLog().debug("No SyncResources elements");
 	}
-	
-	if(this.syncVFSPaths != null){
-	    getLog().debug("SyncVFSPaths: "+this.syncVFSPaths.size()+" elements");
-	    for(String res:(List<String>)this.syncVFSPaths){
-		getLog().debug("  VFSPath: "+res);
-	    }		
+
+	if (this.syncVFSPaths != null) {
+	    getLog().debug("SyncVFSPaths: " + this.syncVFSPaths.size() + " elements");
+	    for (String res:(List<String>) this.syncVFSPaths) {
+		getLog().debug("  VFSPath: " + res);
+	    }
 	}
     }
 }
