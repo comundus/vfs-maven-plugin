@@ -5,6 +5,11 @@
       <!-- item name="Introduction" href="introduction.html"/ -->
       <!-- item name="How to Use" href="howto.html"/ -->
     </menu>
+    <menu ref="reports" />
+    <!--
+    <menu ref="parent" />
+    <menu ref="modules" />
     ${reports}
+    -->
   </body>
 </project>

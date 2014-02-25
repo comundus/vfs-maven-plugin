@@ -16,7 +16,10 @@
     <!-- rule ref="rulesets/controversial.xml" / -->
 
     <rule ref="rulesets/java/coupling.xml">
+    	<!-- 
         <exclude name="ExcessiveImports" />
+         -->
+        <exclude name="LawOfDemeter" />
     </rule>
     <rule ref="rulesets/java/design.xml">
 		<exclude name="AbstractClassWithoutAbstractMethod" />
@@ -25,7 +28,9 @@
 		<exclude name="ImmutableField" />
         <exclude name="NonThreadSafeSingleton" />
         <exclude name="ConfusingTernary" />
+        <!-- 
         <exclude name="PreserveStackTrace" />
+         -->
     </rule>
     <rule ref="rulesets/java/finalizers.xml" />
     <rule ref="rulesets/java/imports.xml" />

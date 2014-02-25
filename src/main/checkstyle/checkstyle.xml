@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
@@ -19,8 +19,8 @@ under the License.
 -->
 
 <!DOCTYPE module PUBLIC
-    "-//Puppy Crawl//DTD Check Configuration 1.2//EN"
-    "http://www.puppycrawl.com/dtds/configuration_1_2.dtd">
+	"-//Puppy Crawl//DTD Check Configuration 1.3//EN"
+	"http://www.puppycrawl.com/dtds/configuration_1_3.dtd">
 
 <!--
 
@@ -50,169 +50,206 @@ under the License.
 -->
 
 <module name="Checker">
-
-    <!-- Checks that a package.html file exists for each package.     -->
-    <!-- See http://checkstyle.sf.net/config_javadoc.html#PackageHtml -->
-    <module name="JavadocPackage"/>
-
-    <!-- Checks whether files end with a new line.                        -->
-    <!-- See http://checkstyle.sf.net/config_misc.html#NewlineAtEndOfFile -->
-    <!-- configuration for comundus: -->
-	<module name="NewlineAtEndOfFile">
+  <property name="severity" value="warning"/>
+  <property name="localeCountry" value="US"/>
+  <property name="localeLanguage" value="en"/>
+  <property name="charset" value="UTF-8"/>
+  
+  <!-- Checks that a package.html file exists for each package.     -->
+  <!-- See http://checkstyle.sf.net/config_javadoc.html#PackageHtml -->
+  <module name="JavadocPackage"/>
+  
+  <!-- Checks whether files end with a new line.                        -->
+  <!-- See http://checkstyle.sf.net/config_misc.html#NewlineAtEndOfFile -->
+  <!-- configuration for comundus: -->
+  <module name="NewlineAtEndOfFile">
     	<property name="lineSeparator" value="lf"/>
-	</module>
-    <!-- Checks that property files contain the same keys.         -->
-    <!-- See http://checkstyle.sf.net/config_misc.html#Translation -->
-    <module name="Translation"/>
-
-        <!-- Checks for Size Violations.                    -->
-        <!-- See http://checkstyle.sf.net/config_sizes.html -->
-        <!-- configuration for comundus: -->
-        <module name="FileLength">
-            <property name="max" value="2500"/>
-        </module>
-        <module name="FileTabCharacter"/>
-
-    <module name="TreeWalker">
-
-        <property name="cacheFile" value="${checkstyle.cache.file}"/>
-
-        <!-- Checks for Javadoc comments.                     -->
-        <!-- See http://checkstyle.sf.net/config_javadoc.html -->
-        <module name="JavadocMethod"/>
-        <module name="JavadocType"/>
-        <module name="JavadocVariable"/>
-        <module name="JavadocStyle"/>
-
-
-        <!-- Checks for Naming Conventions.                  -->
-        <!-- See http://checkstyle.sf.net/config_naming.html -->
-        <module name="ConstantName"/>
-        <module name="LocalFinalVariableName"/>
-        <module name="LocalVariableName"/>
-        <module name="MemberName"/>
-        <module name="MethodName"/>
-        <module name="PackageName"/>
-        <module name="ParameterName"/>
-        <module name="StaticVariableName"/>
-        <module name="TypeName"/>
-
-
-        <!-- Checks for Headers                                -->
-        <!-- See http://checkstyle.sf.net/config_header.html   -->
-        <!-- <module name="Header">                            -->
-            <!-- The follow property value demonstrates the ability     -->
-            <!-- to have access to ANT properties. In this case it uses -->
-            <!-- the ${basedir} property to allow Checkstyle to be run  -->
-            <!-- from any directory within a project. See property      -->
-            <!-- expansion,                                             -->
-            <!-- http://checkstyle.sf.net/config.html#properties        -->
-            <!-- <property                                              -->
-            <!--     name="headerFile"                                  -->
-            <!--     value="${basedir}/java.header"/>                   -->
-        <!-- </module> -->
-
-        <!-- Following interprets the header file as regular expressions. -->
-        <!-- <module name="RegexpHeader"/>                                -->
-
-
-        <!-- Checks for imports                              -->
-        <!-- See http://checkstyle.sf.net/config_import.html -->
-        <module name="AvoidStarImport"/>
-        <module name="IllegalImport"/> <!-- defaults to sun.* packages -->
-        <module name="RedundantImport"/>
-        <module name="UnusedImports"/>
-
-        <!-- removed for comundus: -->
-        <!-- module name="LineLength" / -->
-        <!-- configuration for comundus: -->
-        <module name="MethodLength">
-            <property name="max" value="250"/>
-        </module>
-        <!-- removed for comundus: -->
-        <!-- module name="ParameterNumber"/ -->
-
-
-        <!-- Checks for whitespace                               -->
-        <!-- See http://checkstyle.sf.net/config_whitespace.html -->
-        <module name="EmptyForIteratorPad"/>
-        <module name="MethodParamPad"/>
-        <!-- configuration for comundus: -->
-        <module name="NoWhitespaceAfter">
-            <property name="tokens" value="BNOT, DEC, DOT, INC, LNOT, UNARY_MINUS, UNARY_PLUS"/>
-        </module>
-        <module name="NoWhitespaceBefore"/>
-        <!-- configuration for comundus: -->
-		<!-- eol for all tokens except assignment operators and except colon and question -->
-        <module name="OperatorWrap">
-			<property name="option" value="eol" />
-			<property name="tokens" value="BAND, BOR, BSR, BXOR, DIV, EQUAL, GE, GT, LAND, LE, LITERAL_INSTANCEOF, LOR, LT, MINUS, MOD, NOT_EQUAL, PLUS, SL, SR, STAR" />
-		</module>
-        <module name="ParenPad"/>
-        <module name="TypecastParenPad"/>
-        <module name="WhitespaceAfter"/>
-        <module name="WhitespaceAround"/>
-
-
-        <!-- Modifier Checks                                    -->
-        <!-- See http://checkstyle.sf.net/config_modifiers.html -->
-        <module name="ModifierOrder"/>
-        <module name="RedundantModifier"/>
-
-
-        <!-- Checks for blocks. You know, those {}'s         -->
-        <!-- See http://checkstyle.sf.net/config_blocks.html -->
-        <module name="AvoidNestedBlocks"/>
-        <!-- configuration for comundus: -->
-        <module name="EmptyBlock">
-            <property name="option" value="text"/>
-        </module>        
-        <module name="LeftCurly"/>
-        <module name="NeedBraces"/>
-        <module name="RightCurly"/>
-
-        <!-- Checks for common coding problems               -->
-        <!-- See http://checkstyle.sf.net/config_coding.html -->
-        <!-- removed for comundus: -->
-        <!-- module name="AvoidInlineConditionals"/ -->
-        <module name="EmptyStatement"/>
-        <module name="EqualsHashCode"/>
-        <!-- configuration for comundus: -->
-        <module name="HiddenField">
-			<property name="ignoreConstructorParameter" value="true" />
-			<property name="ignoreSetter" value="true" />
-		</module>
-        <module name="IllegalInstantiation"/>
-        <module name="InnerAssignment"/>
-        <!-- removed for comundus: -->
-        <!-- module name="MagicNumber" / -->
-        <module name="MissingSwitchDefault"/>
-        <module name="RedundantThrows"/>
-        <module name="SimplifyBooleanExpression"/>
-        <module name="SimplifyBooleanReturn"/>
-
-        <!-- Checks for class design                         -->
-        <!-- See http://checkstyle.sf.net/config_design.html -->
-        <!-- removed for comundus: -->
-        <!-- module name="DesignForExtension"/ -->
-        <module name="FinalClass"/>
-        <module name="HideUtilityClassConstructor"/>
-        <module name="InterfaceIsType"/>
-        <module name="VisibilityModifier"/>
-
-
-        <!-- Miscellaneous other checks.                   -->
-        <!-- See http://checkstyle.sf.net/config_misc.html -->
-        <module name="ArrayTypeStyle"/>
-        <module name="FinalParameters"/>
-        <!-- removed for comundus: -->
-        <!-- module name="GenericIllegalRegexp">
-            <property name="format" value="\s+$"/>
-            <property name="message" value="Line has trailing spaces."/>
-        </module -->
-        <module name="TodoComment"/>
-        <module name="UpperEll"/>
-
+  </module>  
+  
+  <module name="TreeWalker">
+    <module name="JavadocMethod">
+      <property name="severity" value="info"/>
+      <property name="scope" value="package"/>
+      <property name="allowMissingThrowsTags" value="true"/>
+      <property name="suppressLoadErrors" value="true"/>
+      <metadata name="net.sf.eclipsecs.core.lastEnabledSeverity" value="info"/>
+    </module>
+    <module name="JavadocType"/>
+    <!--
+    <module name="JavadocVariable"/>
+    -->
+    <module name="JavadocStyle"/>
+    <!-- Checks for Naming Conventions.                  -->
+    <!-- See http://checkstyle.sf.net/config_naming.html -->
+    <module name="ConstantName">
+      <property name="format" value="^((_[0-9])|[A-Z])[A-Z0-9]*(_[A-Z0-9]+)*$"/>
+    </module>
+    <module name="LocalFinalVariableName"/>
+    <module name="LocalVariableName">
+      <property name="severity" value="info"/>
+    </module>
+    <module name="MemberName">
+    	<property name="format" value="^[_a-z][_a-zA-Z0-9]*$"/>
+    </module>
+    <module name="MethodName"/>
+    <module name="PackageName"/>
+    <module name="ParameterName"/>
+    <module name="StaticVariableName"/>
+    <module name="TypeName"/>
+    <!-- Checks for imports                              -->
+    <!-- See http://checkstyle.sf.net/config_import.html -->
+    <module name="AvoidStarImport"/>
+    <module name="IllegalImport"/> <!-- defaults to sun.* packages -->
+    <module name="RedundantImport"/>
+    <module name="UnusedImports"/>
+    <module name="MethodLength">
+      <property name="max" value="250"/>
+    </module>
+    <!-- increased from 7 to 10 for comundus: -->
+    <module name="ParameterNumber">
+	    <property name="max" value="10"/>
+    </module>
+    <module name="LineLength">
+      <property name="severity" value="info"/>
+      <property name="max" value="135"/>
+      <property name="tabWidth" value="4"/>
     </module>
 
+    <!-- Checks for whitespace                               -->
+    <!-- See http://checkstyle.sf.net/config_whitespace.html -->
+    <module name="EmptyForIteratorPad"/>
+    <module name="MethodParamPad"/>
+    <module name="NoWhitespaceAfter">
+      <!--
+      <property name="severity" value="info"/>
+      -->
+      <property name="tokens" value="BNOT, DEC, DOT, INC, LNOT, UNARY_MINUS, UNARY_PLUS"/>
+    </module>
+    <module name="NoWhitespaceBefore">
+      <property name="severity" value="info"/>
+    </module>
+
+    <!-- configuration for comundus: -->
+    <!-- eol for all tokens except assignment operators and except colon and question -->
+    <module name="OperatorWrap">
+		<property name="option" value="eol" />
+		<property name="tokens" value="BAND, BOR, BSR, BXOR, DIV, EQUAL, GE, GT, LAND, LE, LITERAL_INSTANCEOF, LOR, LT, MINUS, MOD, NOT_EQUAL, PLUS, SL, SR, STAR" />
+    </module>
+    <module name="ParenPad">
+      <property name="severity" value="info"/>
+    </module>
+    <module name="TypecastParenPad"/>
+    <module name="WhitespaceAfter">
+      <property name="severity" value="info"/>
+    </module>
+    <module name="WhitespaceAround">
+      <property name="severity" value="info"/>
+    </module>
+    
+    <!-- Modifier Checks                                    -->
+    <!-- See http://checkstyle.sf.net/config_modifiers.html -->
+    <module name="ModifierOrder"/>
+    <module name="RedundantModifier">
+      <property name="tokens" value="VARIABLE_DEF,ANNOTATION_FIELD_DEF,INTERFACE_DEF"/>
+    </module>
+    
+    <!-- Checks for blocks. You know, those {}'s         -->
+    <!-- See http://checkstyle.sf.net/config_blocks.html -->
+    <module name="AvoidNestedBlocks"/>
+    <module name="EmptyBlock">
+	  <property name="option" value="text"/>
+	  <!--
+      <property name="tokens" value="LITERAL_DO,LITERAL_ELSE,LITERAL_FINALLY,LITERAL_IF,LITERAL_FOR,LITERAL_TRY,LITERAL_WHILE,STATIC_INIT"/>
+      -->
+    </module>
+    <module name="LeftCurly"/>
+    <module name="NeedBraces">
+      <property name="tokens" value="LITERAL_DO,LITERAL_FOR,LITERAL_WHILE"/>
+    </module>
+    <module name="RightCurly"/>
+    <module name="EmptyStatement"/>
+    <module name="EqualsHashCode"/>
+    <module name="HiddenField">
+      <property name="ignoreConstructorParameter" value="true"/>
+      <property name="ignoreSetter" value="true"/>
+    </module>
+    <module name="IllegalInstantiation"/>
+    <module name="InnerAssignment"/>
+    <module name="MagicNumber">
+      <property name="severity" value="info"/>
+      <property name="ignoreHashCodeMethod" value="true"/>
+      <property name="ignoreAnnotation" value="true"/>
+    </module>
+    <module name="MissingSwitchDefault"/>
+    <module name="RedundantThrows">
+      <property name="suppressLoadErrors" value="true"/>
+    </module>
+    <module name="SimplifyBooleanExpression"/>
+    <module name="SimplifyBooleanReturn"/>
+    
+    <!-- Checks for class design                         -->
+    <!-- See http://checkstyle.sf.net/config_design.html -->
+    <!-- removed for comundus: -->
+    <!-- module name="DesignForExtension"/ -->
+    <module name="FinalClass"/>
+    <module name="HideUtilityClassConstructor"/>
+    <module name="InterfaceIsType"/>
+    <module name="VisibilityModifier"/>
+    
+    <!-- Miscellaneous other checks.                   -->
+    <!-- See http://checkstyle.sf.net/config_misc.html -->
+    <module name="ArrayTypeStyle"/>
+    <module name="FinalParameters">
+      <property name="severity" value="ignore"/>
+      <metadata name="net.sf.eclipsecs.core.lastEnabledSeverity" value="inherit"/>
+    </module>
+    <module name="TodoComment"/>
+    <module name="UpperEll"/>
+    <module name="RegexpSinglelineJava">
+      <metadata name="net.sf.eclipsecs.core.comment" value="System.out.println"/>
+      <property name="format" value="System\.(out)|(err)\.print(ln)?"/>
+      <property name="message" value="System.out.println disallowed"/>
+      <property name="ignoreComments" value="true"/>
+    </module>
+    <module name="RegexpSinglelineJava">
+      <metadata name="net.sf.eclipsecs.core.comment" value="printStackTrace"/>
+      <property name="format" value="\.\s*printStackTrace\s*\(\s*\)"/>
+      <property name="message" value="printStackTrace() is disallowed"/>
+      <property name="ignoreComments" value="true"/>
+    </module>
+    <module name="EmptyBlock">
+      <metadata name="net.sf.eclipsecs.core.comment" value="Empty Catch Block"/>
+      <property name="option" value="text"/>
+      <property name="tokens" value="LITERAL_CATCH"/>
+    </module>
+  </module>
+  <module name="NewlineAtEndOfFile"/>
+  <!-- Checks that property files contain the same keys.         -->
+  <!-- See http://checkstyle.sf.net/config_misc.html#Translation -->
+  <module name="Translation">
+	  <property name="severity" value="error"/>
+  </module>
+
+  <!-- Checks for Size Violations.                    -->
+  <!-- See http://checkstyle.sf.net/config_sizes.html -->
+  <!-- configuration for comundus: -->
+  <module name="FileLength">
+	  <property name="max" value="2500"/>
+  </module>
+  <module name="RegexpSingleline">
+    <metadata name="net.sf.eclipsecs.core.comment" value="Trailing spaces"/>
+    <property name="severity" value="info"/>
+    <property name="format" value="\s+$"/>
+    <property name="message" value="Line has trailing spaces."/>
+  </module>
+  <module name="RegexpMultiline">
+    <metadata name="net.sf.eclipsecs.core.comment" value="Consecutive empty lines"/>
+    <property name="format" value="^(\s*\n){2}"/>
+    <property name="message" value="Consecutive empty lines"/>
+  </module>
+  <module name="RegexpHeader">
+    <property name="severity" value="info"/>
+    <property name="header" value="^// ?\(C\) (\d{4} )?comundus GmbH, D-71332 WAIBLINGEN, www\.comundus\.com$\n^package .*$"/>
+    <property name="fileExtensions" value="java"/>
+  </module>
 </module>
