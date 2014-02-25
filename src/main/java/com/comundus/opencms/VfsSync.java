@@ -1,3 +1,4 @@
+//(C) comundus GmbH, D-71332 WAIBLINGEN, www.comundus.com
 package com.comundus.opencms;
 
 import java.io.DataOutputStream;
@@ -57,15 +58,12 @@ import org.xml.sax.SAXException;
 
 import com.comundus.opencms.vfs.SyncResource;
 
-
 /**
  * Performs VFS synchronisation.
  *
  * methods taken from org.opencms.synchronize.CmsSynchronize and from
  * org.opencms.importexport.CmsExport
  */
-
-//(C) comundus GmbH, D-71332 WAIBLINGEN, www.comundus.com
 public class VfsSync extends XmlHandling {
     /** Flag to export a resource from the VFS to the FS. */
     static final int EXPORT_FROM_VFS = 1;
@@ -133,6 +131,8 @@ public class VfsSync extends XmlHandling {
      *            path in RFS for metadata files
      * @param syncVFSPaths
      *            List of paths in VFS to synchronize
+     * @param syncResources
+     *            List of {@code <syncResource>} with resources to synchronize
      * @param adminPassword
      *            password of user "Admin" performing the operation
      * @throws Exception
@@ -143,7 +143,7 @@ public class VfsSync extends XmlHandling {
         final List<String> syncVFSPaths, List<SyncResource> syncResources,
         final String adminPassword)
         throws Exception {
-    	
+
         this.destinationPathInRfs = dPathInRfs;
         this.metadataPathInRfs = mPathInRfs;
         this.count = 1;
@@ -184,14 +184,14 @@ public class VfsSync extends XmlHandling {
         if (!destinationFolder.exists() || !destinationFolder.isDirectory()) {
             // destination folder does not exist
             throw new CmsSynchronizeException(org.opencms.synchronize.Messages.get()
-                                                                              .container(org.opencms.synchronize.Messages.ERR_RFS_DESTINATION_NOT_THERE_1,
+                                            .container(org.opencms.synchronize.Messages.ERR_RFS_DESTINATION_NOT_THERE_1,
                     this.destinationPathInRfs));
         }
 
         if (!destinationFolder.canWrite()) {
             // destination folder can't be written to
             throw new CmsSynchronizeException(org.opencms.synchronize.Messages.get()
-                                                                              .container(org.opencms.synchronize.Messages.ERR_RFS_DESTINATION_NO_WRITE_1,
+                                            .container(org.opencms.synchronize.Messages.ERR_RFS_DESTINATION_NO_WRITE_1,
                     this.destinationPathInRfs));
         }
 
@@ -201,8 +201,8 @@ public class VfsSync extends XmlHandling {
         // OpenCms.fireCmsEvent(new
         // CmsEvent(I_CmsEventListener.EVENT_CLEAR_CACHES,
         // Collections.EMPTY_MAP));
-        syncResources=mergeSyncResourceLists(syncVFSPaths, syncResources);
-        
+        syncResources = mergeSyncResourceLists(syncVFSPaths, syncResources);
+
         this.doTheSync(syncResources);
         rewriteParseables();
         importRelations();
@@ -225,7 +225,7 @@ public class VfsSync extends XmlHandling {
      * and checks have been done. This is the entry point for the integration of
      * this synchronization in OpenCms.
      *
-     * @param syncVFSPaths
+     * @param syncResources
      *            List of paths in VFS to synchronize
      * @throws CmsException
      *             if anything goes wrong
@@ -245,32 +245,33 @@ public class VfsSync extends XmlHandling {
                 sourcePathInVfs.getResource().replace('/', File.separatorChar);
             this.getReport()
                 .println(org.opencms.workplace.threads.Messages.get()
-                                                               .container(org.opencms.workplace.threads.Messages.RPT_SYNCHRONIZE_FOLDERS_2,
+                                            .container(org.opencms.workplace.threads.Messages.RPT_SYNCHRONIZE_FOLDERS_2,
                     sourcePathInVfs, destPath), I_CmsReport.FORMAT_HEADLINE);
             // iterating thru VFS
             // possible actions: exportToRfs(res), updateFromRfs(res),
             // deleteFromVfs(res)
             // any entry touched so far is moved from m_syncList to
             // m_newSyncList
-            // so, entries remaining in m_synclist afterwards 
+            // so, entries remaining in m_synclist afterwards
             // do no longer exist in VFS
             this.syncVfsToRfs(sourcePathInVfs, true);
         }
-        
+
         // iterating thru RFS
         // deleting all RFS files from m_synclist
         // so, during a fresh import nothing ever gets deleted from RFS!
-        report("---- Starting search for deleted resources",I_CmsReport.FORMAT_HEADLINE);
-        this.removeFromRfs(this.destinationPathInRfs,syncResources);
+        report("---- Starting search for deleted resources", I_CmsReport.FORMAT_HEADLINE);
+        this.removeFromRfs(this.destinationPathInRfs, syncResources);
 
         // now checking for all files that might be new in RFS
         for (SyncResource vfsPath:syncResources) {
             final String sourcePath = this.destinationPathInRfs +
             	vfsPath.getResource().replace('/', File.separatorChar);
 
-            report("---- Synchronizing From RFS("+sourcePath+") into VFS ("+vfsPath.getResource()+")", I_CmsReport.FORMAT_HEADLINE);
+            report("---- Synchronizing From RFS(" + sourcePath + ") into VFS (" + vfsPath.getResource() + ")",
+        	    I_CmsReport.FORMAT_HEADLINE);
             // iterating thru RFS
-            // possible action: importToVfs()            
+            // possible action: importToVfs()
             this.copyFromRfs(vfsPath);
         }
 
@@ -283,9 +284,8 @@ public class VfsSync extends XmlHandling {
         OpenCms.fireCmsEvent(new CmsEvent(I_CmsEventListener.EVENT_FLEX_PURGE_JSP_REPOSITORY, new HashMap(0)));
     }
 
-
-	/**
-     * Copys all resources from the FS which are not existing in the VFS yet.
+    /**
+     * Copies all resources from the FS which are not existing in the VFS yet.
      * <p>
      *
      * @param syncResource
@@ -299,15 +299,15 @@ public class VfsSync extends XmlHandling {
         File[] res;
         final File fsFile = this.getFileInRfs(syncResource.getResource());
 
-        if(isIgnorableFile(fsFile)){
+        if (isIgnorableFile(fsFile)) {
             return;
         }
-        
-        boolean doRecursion=true;
+
+        boolean doRecursion = true;
         // Only for directories
-        if(fsFile.isDirectory()){
+        if (fsFile.isDirectory()) {
             // first of all, test if this folder exists in the VFS. If not, create
-            // it        	
+            // it
         	try {
         		this.getCms()
         		.readFolder(this.translate(syncResource.getResource()),
@@ -316,7 +316,7 @@ public class VfsSync extends XmlHandling {
         		// the folder could not be read, so create it
         		final String resourceName = this.translate(syncResource.getResource());
 
-        		reportSuccession(fsFile,resourceName);
+        		reportSuccession(fsFile, resourceName);
 
         		CmsResource newFolder;
 
@@ -368,19 +368,17 @@ public class VfsSync extends XmlHandling {
         				.container(org.opencms.report.Messages.RPT_OK_0),
         				I_CmsReport.FORMAT_OK);
         	}
-        	
-        	
-        	
+
         	// For the next step, get all resources in this folder
             res = fsFile.listFiles();
 
-        }else{
+        } else {
         	// For the next step we put our file as the only element of the list to be processed
         	// but we will not do a recursion on it
-        	res=new File[1];
-        	res[0]=fsFile;
-        	doRecursion=false;
-        }            
+        	res = new File[1];
+        	res[0] = fsFile;
+        	doRecursion = false;
+        }
 
         // now loop through all resources
         for (int i = 0; i < res.length; i++) {
@@ -391,7 +389,7 @@ public class VfsSync extends XmlHandling {
         	// get the relative filename
         	String resname = res[i].getAbsolutePath();
 
-		if(resourceIsInExcludesArray(this.getFilenameInVfs(res[i]), syncResource.getExcludes())){
+		if (resourceIsInExcludesArray(this.getFilenameInVfs(res[i]), syncResource.getExcludes())) {
 		    //simpleReport("Not checking "+resname+" in copyFromRfs because it is in the excludes list");
 		    continue;
 		}
@@ -413,22 +411,23 @@ public class VfsSync extends XmlHandling {
         		} else {
         			// do a recursion if the current resource is a folder
         			// and the resource is not included in the excludeslist
-        			if(doRecursion){
+        			if (doRecursion) {
         				//simpleReport("Recursion over "+resname+"/");
-        				this.copyFromRfs(new SyncResource(resname + "/",syncResource.getExcludes()));
-        			}else{
+        				this.copyFromRfs(new SyncResource(resname + "/", syncResource.getExcludes()));
+        			} else {
         				//simpleReport("Not doing recursion over "+resname+"/");
-        	            throw new RuntimeException("Not doing recursion over "+resname+". Please check syncVfsPaths and syncResources");
+        			    	throw new RuntimeException("Not doing recursion over " + resname +
+        			    		                   ". Please check syncVfsPaths and syncResources");
         			}
         		}
-        	}else{
+        	} else {
         		//simpleReport("VfsSync.copyFromRfs: Not copying "+resname+" because it is in the remove list");
         	}
         }
-        
+
     }
 
-    private void reportSuccession(File fsFile,String resourceName) {
+    private void reportSuccession(File fsFile, String resourceName) {
         //Reporting stuff
         this.getReport()
             .print(org.opencms.report.Messages.get()
@@ -455,7 +454,6 @@ public class VfsSync extends XmlHandling {
                                               .container(org.opencms.report.Messages.RPT_DOTS_0));
         //End of reporting stuff
 
-		
 	}
 
 	/**
@@ -473,7 +471,7 @@ public class VfsSync extends XmlHandling {
         throws CmsException {
         if (newFile.exists()) {
             throw new CmsSynchronizeException(org.opencms.synchronize.Messages.get()
-                                                                              .container(org.opencms.synchronize.Messages.ERR_EXISTENT_FILE_1,
+                                                        .container(org.opencms.synchronize.Messages.ERR_EXISTENT_FILE_1,
                     newFile.getPath()));
         }
 
@@ -491,12 +489,12 @@ public class VfsSync extends XmlHandling {
                 fOut = new FileOutputStream(newFile);
             } else {
                 throw new CmsSynchronizeException(org.opencms.synchronize.Messages.get()
-                                                                                  .container(org.opencms.synchronize.Messages.ERR_CREATE_DIR_1,
+                                                           .container(org.opencms.synchronize.Messages.ERR_CREATE_DIR_1,
                         newFile.getPath()));
             }
         } catch (final IOException e) {
             throw new CmsSynchronizeException(org.opencms.synchronize.Messages.get()
-                                                                              .container(org.opencms.synchronize.Messages.ERR_CREATE_FILE_1,
+                                                          .container(org.opencms.synchronize.Messages.ERR_CREATE_FILE_1,
                     this.getClass().getName(), newFile.getPath()), e);
         } finally {
             if (fOut != null) {
@@ -676,7 +674,7 @@ public class VfsSync extends XmlHandling {
                         this.writeFileByte(vfsFile.getContents(), fsFile);
                     } catch (final IOException e) {
                         throw new CmsSynchronizeException(org.opencms.synchronize.Messages.get()
-                                                                                          .container(org.opencms.synchronize.Messages.ERR_WRITE_FILE_0));
+                                                         .container(org.opencms.synchronize.Messages.ERR_WRITE_FILE_0));
                     }
 
                 } else { // not a file but a folder
@@ -712,10 +710,10 @@ public class VfsSync extends XmlHandling {
                     metadataFile.setLastModified(fsFile.lastModified());
                 } catch (final SAXException e) {
                     throw new CmsSynchronizeException(org.opencms.synchronize.Messages.get()
-                                                                                      .container(org.opencms.synchronize.Messages.ERR_WRITE_FILE_0));
+                                                         .container(org.opencms.synchronize.Messages.ERR_WRITE_FILE_0));
                 } catch (final IOException e) {
                     throw new CmsSynchronizeException(org.opencms.synchronize.Messages.get()
-                                                                                      .container(org.opencms.synchronize.Messages.ERR_WRITE_FILE_0));
+                                                         .container(org.opencms.synchronize.Messages.ERR_WRITE_FILE_0));
                 }
 
                 // add resource to synchronisation list
@@ -815,7 +813,7 @@ public class VfsSync extends XmlHandling {
                 // read the xml-config file
                 this.setDocXml(CmsXmlUtils.unmarshalHelper(CmsFileUtil.readFile(
                             metadataFile), null));
-                newFile = this.readResourcesFromManifest(content);	                    
+                newFile = this.readResourcesFromManifest(content);
                 // resource gets last modified from metadata
 
                 // old stuff newRes = this.getCms()
@@ -852,7 +850,7 @@ public class VfsSync extends XmlHandling {
                 I_CmsReport.FORMAT_OK);
         } catch (final IOException e) {
             throw new CmsSynchronizeException(org.opencms.synchronize.Messages.get()
-                                                                              .container(org.opencms.synchronize.Messages.ERR_READING_FILE_1,
+                                                         .container(org.opencms.synchronize.Messages.ERR_READING_FILE_1,
                     fsFile.getName()), e);
         }
     }
@@ -915,7 +913,7 @@ public class VfsSync extends XmlHandling {
                 }
             } catch (final IOException e) {
                 throw new CmsSynchronizeException(org.opencms.synchronize.Messages.get()
-                                                                                  .container(org.opencms.synchronize.Messages.ERR_READ_SYNC_LIST_0),
+                                                      .container(org.opencms.synchronize.Messages.ERR_READ_SYNC_LIST_0),
                     e);
             } finally {
                 // close all streams that were used
@@ -948,7 +946,7 @@ public class VfsSync extends XmlHandling {
      *
      * @param folder
      *            the folder in the FS to check
-     * @param syncResources 
+     * @param syncResources
      *            the list of sync resources to recognize files to be separately treated
      * @throws CmsException
      *             if something goes wrong
@@ -960,16 +958,16 @@ public class VfsSync extends XmlHandling {
         // get the corresponding folder in the FS
         File[] res;
         final File rfsFile = new File(folder);
-        boolean removingFolder=true;
-        
+        boolean removingFolder = true;
+
         // get all resources in this folder
-        if(rfsFile.isDirectory()){
-        	
-        	res = rfsFile.listFiles();
-        }else{
-        	removingFolder=false;
-        	res=new File[1];
-        	res[0]=rfsFile;
+        if (rfsFile.isDirectory()) {
+
+            res = rfsFile.listFiles();
+        } else {
+            removingFolder = false;
+            res = new File[1];
+            res[0] = rfsFile;
         }
 
         // now loop through all resources
@@ -978,13 +976,13 @@ public class VfsSync extends XmlHandling {
             final String vfsFile = this.getFilenameInVfs(res[i]);
 
         	//Do not check if the resource is in the excludes list
-        	if(syncResourcesContainsExclude(syncResources,res[i])){
+        	if (syncResourcesContainsExclude(syncResources, res[i])) {
         		//simpleReport("Not recursing deletion into "+res[i]+" because it is in the excludes list");
         		continue;
         	}
-            
+
             // recurse if it is a directory, we must go depth first to delete
-            // files 
+            // files
             final String abspath = res[i].getAbsolutePath();
             if ((res[i].isDirectory()) && (!res[i].isHidden()) &&
                     (!abspath.endsWith(File.separator + "CVS"))) {
@@ -1036,69 +1034,68 @@ public class VfsSync extends XmlHandling {
     }
 
     /**
-     * 
+     *
      * @param syncResources
      * @param file
      * @return
      */
     private boolean syncResourcesContainsExclude(
 			List<SyncResource> syncResources, File file) {
-    	String vfsPath=this.getFilenameInVfs(file);
-    	for(SyncResource syncRes:syncResources){
-    		if(resourceIsInExcludesArray(vfsPath, syncRes.getExcludes())){
+    	String vfsPath = this.getFilenameInVfs(file);
+    	for (SyncResource syncRes:syncResources) {
+    		if (resourceIsInExcludesArray(vfsPath, syncRes.getExcludes())) {
     			return true;
     		}
     	}
     	return false;
 	}
 
-	/**
-     * 
+    /**
+     *
      * @param syncResources
      * @param file
      * @return true if the file corresponds to one of the resources in the list
      */
     private boolean syncResourcesContainsResource(List<SyncResource> syncResources, File file) {
-    	String vfsName=getFilenameInVfs(file);
-    	for(SyncResource res:syncResources){
-    		if (res.getResource().equals(vfsName)){
+    	String vfsName = getFilenameInVfs(file);
+    	for (SyncResource res:syncResources) {
+    		if (res.getResource().equals(vfsName)) {
     			return true;
     		}
     	}
-    	return false;    	
+    	return false;
 	}
-    
+
     /**
-     * 
-     * @param str
-     * @param strArray
-     * @return
+     * Returns true if the resource in {@code str} can be found in the list in {@code strArray}.
+     * @param str resource
+     * @param strArray list of resources
+     * @return true if the resource in {@code str} can be found in the list in {@code strArray}.
      */
-	boolean resourceIsInExcludesArray(String str, String[] strArray) {
-        if(str.endsWith("/")){
-        	str=str.substring(0,str.length()-1);
-        }
-		String [] sortedArray=new String[strArray.length];
-		int i=0;
-		for(String elem:strArray){
-	        if(elem.endsWith("/")){	        	
-	        	elem=elem.substring(0,elem.length()-1);
-	        }
-	        sortedArray[i++]=elem;
-			
-		}
-        //System.arraycopy(strArray, 0, sortedArray, 0, strArray.length);
-        Arrays.sort(sortedArray);
-
-        int posAst=Arrays.binarySearch(sortedArray,"*");
-        int posStr=Arrays.binarySearch(sortedArray,str);
-        boolean b= posAst>=0 || posStr>=0;
-
-        return b;
+    boolean resourceIsInExcludesArray(String str, String[] strArray) {
+	if (str.endsWith("/")) {
+	    str = str.substring(0, str.length() - 1);
 	}
+	String [] sortedArray = new String[strArray.length];
+	int i = 0;
+	for (String elem:strArray) {
+	    if (elem.endsWith("/")) {
+		elem = elem.substring(0, elem.length() - 1);
+	    }
+	    sortedArray[i++] = elem;
 
+	}
+	//System.arraycopy(strArray, 0, sortedArray, 0, strArray.length);
+	Arrays.sort(sortedArray);
 
-	/**
+	int posAst = Arrays.binarySearch(sortedArray, "*");
+	int posStr = Arrays.binarySearch(sortedArray, str);
+	boolean b = posAst >= 0 || posStr >= 0;
+
+	return b;
+    }
+
+    /**
      * Updates the synchronisation lists if a resource is not used during the
      * synchronisation process.
      * <p>
@@ -1106,29 +1103,28 @@ public class VfsSync extends XmlHandling {
      * @param res
      *            the resource whose entry must be updated
      */
-
     // code taken from org.opencms.synchronize.CmsSynchronize
     private void skipResource(final CmsResource res) {
-        // add the file to the new sync list...
-        final String resname = this.getCms().getSitePath(res);
-        final CmsSynchronizeList sList = (CmsSynchronizeList) this.syncList.get(this.translate(
-                    resname));
-        this.newSyncList.put(this.translate(resname), sList);
-        // .. and remove it from the old one
-        this.syncList.remove(this.translate(resname));
-        // update the report
-        this.getReport()
-            .print(org.opencms.report.Messages.get()
-                                              .container(org.opencms.report.Messages.RPT_SUCCESSION_1,
-                String.valueOf(this.count++)), I_CmsReport.FORMAT_NOTE);
-        this.getReport()
-            .print(org.opencms.synchronize.Messages.get()
-                                                   .container(org.opencms.synchronize.Messages.RPT_SKIPPING_0),
-            I_CmsReport.FORMAT_NOTE);
-        this.getReport()
-            .println(org.opencms.report.Messages.get()
-                                                .container(org.opencms.report.Messages.RPT_ARGUMENT_1,
-                resname));
+	// add the file to the new sync list...
+	final String resname = this.getCms().getSitePath(res);
+	final CmsSynchronizeList sList = (CmsSynchronizeList) this.syncList.get(this.translate(
+		resname));
+	this.newSyncList.put(this.translate(resname), sList);
+	// .. and remove it from the old one
+	this.syncList.remove(this.translate(resname));
+	// update the report
+	this.getReport()
+	.print(org.opencms.report.Messages.get()
+		.container(org.opencms.report.Messages.RPT_SUCCESSION_1,
+			String.valueOf(this.count++)), I_CmsReport.FORMAT_NOTE);
+	this.getReport()
+	.print(org.opencms.synchronize.Messages.get()
+		.container(org.opencms.synchronize.Messages.RPT_SKIPPING_0),
+		I_CmsReport.FORMAT_NOTE);
+	this.getReport()
+	.println(org.opencms.report.Messages.get()
+		.container(org.opencms.report.Messages.RPT_ARGUMENT_1,
+			resname));
     }
 
     /**
@@ -1164,8 +1160,8 @@ public class VfsSync extends XmlHandling {
         // in contrast to plain OpenCms Sync, we need to export the start
         // folders ~folder.xml -- as well as single files
         // first check if this folder is a folder and must be synchronised
-        
-        CmsResource res=null;
+
+        CmsResource res = null;
         if (startfolder) {
             try {
                 res = this.getCms()
@@ -1193,7 +1189,8 @@ public class VfsSync extends XmlHandling {
                     this.skipResource(res);
                 }
             } catch (final CmsException e) {
-            	simpleReport("VfsSync.syncVfsToRfs: Could not read resource "+sourcePathInVfs.getResource()+". copyFromRfs should copy it");
+            	simpleReport("VfsSync.syncVfsToRfs: Could not read resource " + sourcePathInVfs.getResource() +
+            		". copyFromRfs should copy it");
                 // in case the start folder could not be read stop syncing
                 // VFS=>RFS and leave it to copyFromRfs() to create the folder
                 return;
@@ -1202,18 +1199,18 @@ public class VfsSync extends XmlHandling {
 
         // get all resources in the given folder or fill the list with the file given
         final List<CmsResource> resources;
-        if(res==null){
-        	res = this.getCms()
-        		.readResource(sourcePathInVfs.getResource(),
-                    CmsResourceFilter.IGNORE_EXPIRATION);
+        if (res == null) {
+            res = this.getCms()
+        	    .readResource(sourcePathInVfs.getResource(),
+        		    CmsResourceFilter.IGNORE_EXPIRATION);
         }
-        if(res.isFolder()){
-        	resources= this.getCms()
-                                   .getResourcesInFolder(sourcePathInVfs.getResource(),
-                CmsResourceFilter.IGNORE_EXPIRATION);
-        }else{
-        	resources=new ArrayList<CmsResource>();
-        	//resources.add(res); //This resource has been already correctly synchronized
+        if (res.isFolder()) {
+            resources = this.getCms()
+        	    .getResourcesInFolder(sourcePathInVfs.getResource(),
+        		    CmsResourceFilter.IGNORE_EXPIRATION);
+        } else {
+            resources = new ArrayList<CmsResource>();
+            //resources.add(res); //This resource has been already correctly synchronized
         }
 
         // now look through all resources in the folder
@@ -1224,161 +1221,157 @@ public class VfsSync extends XmlHandling {
             // do nothing, the corresponding file in the RFS will be removed later
             // ~ code taken from org.opencms.importexport.CmsExport
             if ((!res.getState().isDeleted()) &&
-                    (!res.getName().startsWith("~"))) {
-            	
-                String childResourcePath=this.getCms().getSitePath(res);
-                if(resourceIsInExcludesArray(childResourcePath,sourcePathInVfs.getExcludes())){
-                	//simpleReport("Not doing VfsToRfs of "+childResourcePath+" because it is in the excludes list");
-                }else{
-                	//simpleReport("Doing VfsToRfs of "+childResourcePath+" because it is NOT in the excludes list");
-                	//simpleReport("Excludes: "+Arrays.toString(sourcePathInVfs.getExcludes()));
-                	
-            	
-                // do a recursion if the current resource is a folder
-                if (res.isFolder()) {
-                    // first check if this folder must be synchronised
-                    action = this.testSyncVfs(res);
+        	    (!res.getName().startsWith("~"))) {
 
-                    // do the correct action according to the test result
-                    switch (action) {
-                    case EXPORT_FROM_VFS:
-                        this.exportFromVFS(res); // OpenCms names it exportToRfs()
+        	String childResourcePath = this.getCms().getSitePath(res);
+        	if (resourceIsInExcludesArray(childResourcePath, sourcePathInVfs.getExcludes())) {
+        	    //simpleReport("Not doing VfsToRfs of "+childResourcePath+" because it is in the excludes list");
+        	} else {
+        	    //simpleReport("Doing VfsToRfs of "+childResourcePath+" because it is NOT in the excludes list");
+        	    //simpleReport("Excludes: "+Arrays.toString(sourcePathInVfs.getExcludes()));
 
-                        break;
+        	    // do a recursion if the current resource is a folder
+        	    if (res.isFolder()) {
+        		// first check if this folder must be synchronised
+        		action = this.testSyncVfs(res);
 
-                    case UPDATE_IN_VFS:
-                        this.updateInVfs(res);
+        		// do the correct action according to the test result
+        		switch (action) {
+        		case EXPORT_FROM_VFS:
+        		    this.exportFromVFS(res); // OpenCms names it exportToRfs()
 
-                        break;
+        		    break;
 
-                    case DELETE_FROM_VFS:
+        		case UPDATE_IN_VFS:
+        		    this.updateInVfs(res);
 
-                        // passiert unten nach der Rekursion: this.deleteFromVfs(res);
-                        // thus, here, do nothing
-                        break;
+        		    break;
 
-                    default:
-                        this.skipResource(res);
-                    }
+        		case DELETE_FROM_VFS:
 
-                    // recurse into the subfolders. This must be done before
-                    // the folder might be deleted!
-                   	this.syncVfsToRfs(new SyncResource(childResourcePath,sourcePathInVfs.getExcludes()), false);
+        		    // passiert unten nach der Rekursion: this.deleteFromVfs(res);
+        		    // thus, here, do nothing
+        		    break;
 
+        		default:
+        		    this.skipResource(res);
+        		}
 
-                    if (action == DELETE_FROM_VFS) {
-                        this.deleteFromVfs(res);
-                    }
-                } else {
-                    // if the current resource is a file, check if it has to
-                    // be synchronized
-                    action = this.testSyncVfs(res);
+        		// recurse into the subfolders. This must be done before
+        		// the folder might be deleted!
+        		this.syncVfsToRfs(new SyncResource(childResourcePath, sourcePathInVfs.getExcludes()), false);
 
-                    // do the correct action according to the test result
-                    switch (action) {
-                    case EXPORT_FROM_VFS:
-                        this.exportFromVFS(res); // OpenCms names it exportToRfs()
+        		if (action == DELETE_FROM_VFS) {
+        		    this.deleteFromVfs(res);
+        		}
+        	    } else {
+        		// if the current resource is a file, check if it has to
+        		// be synchronized
+        		action = this.testSyncVfs(res);
 
-                        break;
+        		// do the correct action according to the test result
+        		switch (action) {
+        		case EXPORT_FROM_VFS:
+        		    this.exportFromVFS(res); // OpenCms names it exportToRfs()
 
-                    case UPDATE_IN_VFS:
-                        this.updateInVfs(res);
+        		    break;
 
-                        break;
+        		case UPDATE_IN_VFS:
+        		    this.updateInVfs(res);
 
-                    case DELETE_FROM_VFS:
-                        this.deleteFromVfs(res);
+        		    break;
 
-                        break;
+        		case DELETE_FROM_VFS:
+        		    this.deleteFromVfs(res);
 
-                    default:
-                        this.skipResource(res);
-                    }
-                }
-                }//if is in excludes
+        		    break;
+
+        		default:
+        		    this.skipResource(res);
+        		}
+        	    }
+        	} //if is in excludes
             }
         }
     }
 
-
-	/**
+    /**
      * Determines the synchronisation status of a VFS resource.
      *
      * @param res
      *            the VFS resource to check
      * @return integer value for the action to be done for this VFS resource
      * one of:
-         * 0 no action
-         * VfsSync.UPDATE_IN_VFS
-         * VfsSync.EXPORT_FROM_VFS
-         * VfsSync.DELETE_FROM_VFS
+     * 0 no action
+     * VfsSync.UPDATE_IN_VFS
+     * VfsSync.EXPORT_FROM_VFS
+     * VfsSync.DELETE_FROM_VFS
      */
-
     // code taken from org.opencms.synchronize.CmsSynchronize
     private int testSyncVfs(final CmsResource res) {
-        int action = 0;
+	int action = 0;
 
-        // data from sync list
-        final String resourcename = this.getCms().getSitePath(res);
+	// data from sync list
+	final String resourcename = this.getCms().getSitePath(res);
 
-        if (this.syncList.containsKey(this.translate(resourcename))) {
-            // this resource was already used in a previous syncprocess
-            final CmsSynchronizeList sync = (CmsSynchronizeList) this.syncList.get(this.translate(
-                        resourcename));
+	if (this.syncList.containsKey(this.translate(resourcename))) {
+	    // this resource was already used in a previous syncprocess
+	    final CmsSynchronizeList sync = (CmsSynchronizeList) this.syncList.get(this.translate(
+		    resourcename));
 
-            // get the corresponding resource from the FS
-            final File fsFile = this.getFileInRfs(sync.getResName());
-            final File metadataFile;
+	    // get the corresponding resource from the FS
+	    final File fsFile = this.getFileInRfs(sync.getResName());
+	    final File metadataFile;
 
-            if (res.isFolder()) {
-                metadataFile = this.getMetadataFolderInRfs(sync.getResName());
-            } else {
-                metadataFile = this.getMetadataFileInRfs(sync.getResName());
-            }
+	    if (res.isFolder()) {
+		metadataFile = this.getMetadataFolderInRfs(sync.getResName());
+	    } else {
+		metadataFile = this.getMetadataFileInRfs(sync.getResName());
+	    }
 
-            final long vfslastmod = res.getDateLastModified();
+	    final long vfslastmod = res.getDateLastModified();
 
-            // in a subversion team environment it may happen that *only* the metadata file is newer
-            final long rfslastmod = Math.max(fsFile.lastModified(),
-                    metadataFile.lastModified());
+	    // in a subversion team environment it may happen that *only* the metadata file is newer
+	    final long rfslastmod = Math.max(fsFile.lastModified(),
+		    metadataFile.lastModified());
 
-            // now check what to do with this resource.
-            // if the modification date is newer than the logged modification
-            // date in the sync list, this resource must be exported too
-            if (vfslastmod > sync.getModifiedVfs()) {
-                // VFS new compared to last sync
-                // now check if the resource in the FS is newer, then the
-                // resource from the FS must be imported
-                // check if it has been modified since the last sync process
-                // and its newer than the resource in the VFS, only then this
-                // resource must be imported form the FS
-                if ((rfslastmod > sync.getModifiedFs()) &&
-                        (rfslastmod > vfslastmod)) {
-                    // RFS neuer als Sync und VFS
-                    action = UPDATE_IN_VFS; // RFS => VFS
-                } else {
-                    action = EXPORT_FROM_VFS; // VFS => RFS
-                }
-            } else { // nicht neu im VFS
-                     // test if the resource in the FS does not exist anymore.
-                     // if so, remove the resource in the VFS
+	    // now check what to do with this resource.
+	    // if the modification date is newer than the logged modification
+	    // date in the sync list, this resource must be exported too
+	    if (vfslastmod > sync.getModifiedVfs()) {
+		// VFS new compared to last sync
+		// now check if the resource in the FS is newer, then the
+		// resource from the FS must be imported
+		// check if it has been modified since the last sync process
+		// and its newer than the resource in the VFS, only then this
+		// resource must be imported form the FS
+		if ((rfslastmod > sync.getModifiedFs()) &&
+			(rfslastmod > vfslastmod)) {
+		    // RFS neuer als Sync und VFS
+		    action = UPDATE_IN_VFS; // RFS => VFS
+		} else {
+		    action = EXPORT_FROM_VFS; // VFS => RFS
+		}
+	    } else { // nicht neu im VFS
+		// test if the resource in the FS does not exist anymore.
+		// if so, remove the resource in the VFS
 
-                if (fsFile.exists()) {
-                    // now check if the resource in the FS might have changed
-                    if (rfslastmod > sync.getModifiedFs()) {
-                        action = UPDATE_IN_VFS;
-                    } // else action remains 0
-                } else {
-                    action = DELETE_FROM_VFS;
-                }
-            }
-        } else {
-            // the resource name was not found in the sync list
-            // this is a new resource
-            action = EXPORT_FROM_VFS; // VFS => RFS
-        }
+		if (fsFile.exists()) {
+		    // now check if the resource in the FS might have changed
+		    if (rfslastmod > sync.getModifiedFs()) {
+			action = UPDATE_IN_VFS;
+		    } // else action remains 0
+		} else {
+		    action = DELETE_FROM_VFS;
+		}
+	    }
+	} else {
+	    // the resource name was not found in the sync list
+	    // this is a new resource
+	    action = EXPORT_FROM_VFS; // VFS => RFS
+	}
 
-        return action;
+	return action;
     }
 
     /**
@@ -1392,7 +1385,6 @@ public class VfsSync extends XmlHandling {
      *            the resource name to be translated
      * @return the translated resource name
      */
-
     // code taken from org.opencms.synchronize.CmsSynchronize
     private String translate(final String name) {
         String translation; // = null;
@@ -1453,7 +1445,7 @@ public class VfsSync extends XmlHandling {
                 vfsFile.setContents(CmsFileUtil.readFile(fsFile));
             } catch (final IOException e) {
                 throw new CmsSynchronizeException(org.opencms.synchronize.Messages.get()
-                                                                                  .container(org.opencms.synchronize.Messages.ERR_IMPORT_1,
+                                                               .container(org.opencms.synchronize.Messages.ERR_IMPORT_1,
                         fsFile.getName()));
             }
 
@@ -1472,7 +1464,7 @@ public class VfsSync extends XmlHandling {
                     // no content for folder
                 } catch (final IOException ex) {
                     throw new CmsSynchronizeException(org.opencms.synchronize.Messages.get()
-                                                                                      .container(org.opencms.synchronize.Messages.ERR_READING_FILE_1,
+                                                         .container(org.opencms.synchronize.Messages.ERR_READING_FILE_1,
                             fsFile.getName()), ex);
                 }
             } else {
@@ -1501,7 +1493,7 @@ public class VfsSync extends XmlHandling {
                     // no content for folder
                 } catch (final IOException ex) {
                     throw new CmsSynchronizeException(org.opencms.synchronize.Messages.get()
-                                                                                      .container(org.opencms.synchronize.Messages.ERR_READING_FILE_1,
+                                                         .container(org.opencms.synchronize.Messages.ERR_READING_FILE_1,
                             fsFile.getName()), ex);
                 }
             } else {
@@ -1529,12 +1521,12 @@ public class VfsSync extends XmlHandling {
             metadataFile.setLastModified(fsFile.lastModified());
         } catch (final SAXException e) {
             throw new CmsSynchronizeException(org.opencms.synchronize.Messages.get()
-                                                                              .container(org.opencms.synchronize.Messages.ERR_WRITE_FILE_0));
+                                                         .container(org.opencms.synchronize.Messages.ERR_WRITE_FILE_0));
         } catch (final IOException e) {
             throw new CmsSynchronizeException(org.opencms.synchronize.Messages.get()
-                                                                              .container(org.opencms.synchronize.Messages.ERR_WRITE_FILE_0));
+                                                         .container(org.opencms.synchronize.Messages.ERR_WRITE_FILE_0));
         }
-        
+
         // add resource to synchronisation list
         final CmsSynchronizeList sList = new CmsSynchronizeList(sync.getResName(),
                 this.translate(resourcename), readres.getDateLastModified(), fsFile.lastModified());
@@ -1632,8 +1624,7 @@ public class VfsSync extends XmlHandling {
             }
         } catch (final IOException e) {
             throw new CmsDbIoException(org.opencms.synchronize.Messages.get()
-                                                                       .container(org.opencms.synchronize.Messages.ERR_IO_WRITE_SYNCLIST_0),
-                e);
+                                               .container(org.opencms.synchronize.Messages.ERR_IO_WRITE_SYNCLIST_0), e);
         } finally {
             // close all streams that were used
             try {
@@ -1770,7 +1761,7 @@ public class VfsSync extends XmlHandling {
                 userNameLastModified = OpenCms.getDefaultUsers().getUserAdmin();
             }
 
-            // in OpenCms 6.2.3 f�llt das escapeXml weg,
+            // in OpenCms 6.2.3 fällt das escapeXml weg,
             // weil es allgemein im CmsXmlSaxWriter geregelt wird
             // siehe XmlHandling
             fileElement.addElement(CmsImportExportManager.N_USERLASTMODIFIED)
@@ -1919,7 +1910,7 @@ public class VfsSync extends XmlHandling {
             throw e;
         } catch (final CmsException e) {
             final CmsMessageContainer message = org.opencms.importexport.Messages.get()
-                                                                                 .container(org.opencms.importexport.Messages.ERR_IMPORTEXPORT_ERROR_APPENDING_RESOURCE_TO_MANIFEST_1,
+                   .container(org.opencms.importexport.Messages.ERR_IMPORTEXPORT_ERROR_APPENDING_RESOURCE_TO_MANIFEST_1,
                     resource.getRootPath());
             throw new CmsImportExportException(message, e);
         }
@@ -2035,7 +2026,6 @@ public class VfsSync extends XmlHandling {
      * @throws CmsImportExportException
      *             if something goes wrong
      */
-
     // code taken from org.opencms.importexport.CmsImportVersion5
     private CmsResource readResourcesFromManifest(final byte[] content)
         throws CmsException {
@@ -2152,7 +2142,7 @@ public class VfsSync extends XmlHandling {
                 dateexpired = CmsResource.DATE_EXPIRED_DEFAULT;
             }
 
-            // <flags>              
+            // <flags>
             flags = XmlHandling.getChildElementTextValue(currentElement,
                     CmsImportExportManager.N_FLAGS);
 
@@ -2173,11 +2163,11 @@ public class VfsSync extends XmlHandling {
             // if the resource is not immutable and not on the exclude list,
             // import it
             if (resourceNotImmutable) {
-            	
+
                 // get all properties
                 properties = this.readPropertiesFromManifest(currentElement,
                         ignoredProperties);
-                // import the resource               
+                // import the resource
                 res = this.importResource(content, translatedName, type,
                         uuidstructure, uuidresource, datelastmodified,
                         userlastmodified, datecreated, usercreated,
@@ -2186,7 +2176,7 @@ public class VfsSync extends XmlHandling {
                 // if the resource was imported add the access control entrys if
                 // available
                 if (res == null) {
-                	
+
                     // resource import failed, since no CmsResource was created
                     this.getReport()
                         .print(org.opencms.importexport.Messages.get()
@@ -2197,7 +2187,7 @@ public class VfsSync extends XmlHandling {
                                                             .container(org.opencms.report.Messages.RPT_ARGUMENT_1,
                             translatedName));
                 } else {
-                	
+
                     final List aceList = new ArrayList();
                     // write all imported access control entries for this file
                     acentryNodes = currentElement.selectNodes("*/" +
@@ -2275,7 +2265,7 @@ public class VfsSync extends XmlHandling {
             } else { // immutable
                      // skip the file import, just print out the information to the
                      // report
-            		
+
                 this.getReport()
                     .print(org.opencms.importexport.Messages.get()
                                                             .container(org.opencms.importexport.Messages.RPT_SKIPPING_0),
@@ -2289,7 +2279,7 @@ public class VfsSync extends XmlHandling {
             this.getReport().println(e);
 
             final CmsMessageContainer message = org.opencms.importexport.Messages.get()
-                                                                                 .container(org.opencms.importexport.Messages.ERR_IMPORTEXPORT_ERROR_IMPORTING_RESOURCES_0);
+                             .container(org.opencms.importexport.Messages.ERR_IMPORTEXPORT_ERROR_IMPORTING_RESOURCES_0);
             throw new CmsImportExportException(message, e);
         }
 
@@ -2307,7 +2297,7 @@ public class VfsSync extends XmlHandling {
     // code taken from CmsImportVersion5
     protected void importRelations(final CmsResource resource,
         final Element parentElement) {
-        // Get the nodes for the relations        
+        // Get the nodes for the relations
         final List relationElements = parentElement.selectNodes("./" +
                 CmsImportExportManager.N_RELATIONS + "/" +
                 CmsImportExportManager.N_RELATION);
@@ -2509,7 +2499,7 @@ public class VfsSync extends XmlHandling {
         final long datecreated, final String usercreated,
         final long datereleased, final long dateexpired, final String flags,
         final List properties) throws CmsException {
-	
+
         CmsResource result = null;
 
             int size = 0;
@@ -2518,7 +2508,7 @@ public class VfsSync extends XmlHandling {
                 size = content.length;
             }
 
-            // get UUIDs for the user   
+            // get UUIDs for the user
             CmsUUID newUserlastmodified;
             CmsUUID newUsercreated;
 
@@ -2554,7 +2544,7 @@ public class VfsSync extends XmlHandling {
                 newUuidstructure = new CmsUUID();
             }
 
-            // get UUIDs for the resource and content        
+            // get UUIDs for the resource and content
             CmsUUID newUuidresource = null;
 
             if ((uuidresource != null) && (!type.isFolder())) {
@@ -2565,7 +2555,7 @@ public class VfsSync extends XmlHandling {
                 newUuidresource = new CmsUUID();
             }
 
-            // create a new CmsResource                         
+            // create a new CmsResource
             final CmsResource resource = new CmsResource(newUuidstructure,
                     newUuidresource, destination, type.getTypeId(),
                     type.isFolder(), Integer.valueOf(flags).intValue(),
@@ -2585,7 +2575,6 @@ public class VfsSync extends XmlHandling {
                                                         .container(org.opencms.report.Messages.RPT_OK_0),
                     I_CmsReport.FORMAT_OK);
             }
-
 
         return result;
     }
@@ -2811,8 +2800,8 @@ public class VfsSync extends XmlHandling {
     public final void setMetadataPathInRfs(final String pathInRfs) {
         this.metadataPathInRfs = pathInRfs;
     }
-    
-    private boolean isIgnorableFile(File file){
+
+    private boolean isIgnorableFile(File file) {
 	if (file == null) {
 	    return true;
 	}
@@ -2826,11 +2815,10 @@ public class VfsSync extends XmlHandling {
         if (file.getAbsolutePath().endsWith(File.separator + ".svn")) { // Det did see not hidden .svn folders in his life ...
             return true;
         }
-
         if (file.getAbsolutePath().endsWith(File.separator + "CVS")) {
             return true;
-        }    
-        if(file.getName().startsWith(".git")){
+        }
+        if (file.getName().startsWith(".git")) {
             return true;
         }
         return false;
