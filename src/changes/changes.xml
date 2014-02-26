@@ -7,10 +7,13 @@
         <author email="a.rodriguez@comundus.com">Adrian Rodriguez</author>
     </properties>
     <body>
+    	<release version="9.0.1a" date="2014-02-26" description="">
+    		<action dev="ar" type="update">Checkstyle and PMD configuration are retrieved from the maven repository</action>
+    	</release>
 	    <release version="9.0.1" date="2014-02-19" description="Version 9.0.1">
 	       	<action dev="ar" type="update">Updated to new OpenCms version which is 9.0.1</action>
 	       	<action dev="ar" type="update">Using new comundus defaults: comundus-parent 1.4</action>
-	       	<action dev="ar" type="fix">Repaired report generation, compatible with Maven 3.0.4+ and ()presumably)2.2.1</action>
+	       	<action dev="ar" type="fix">Repaired report generation, compatible with Maven 3.0.4+ and (presumably)2.2.1</action>
 	       			
 		</release>
 	    <release version="9.0.0" date="2014-01-09" description="Version 9.0.0">
