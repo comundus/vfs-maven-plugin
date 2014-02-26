@@ -1,3 +1,4 @@
+//(C) comundus GmbH, D-71332 WAIBLINGEN, www.comundus.com
 package com.comundus.opencms.vfs;
 
 import org.apache.maven.plugin.MojoExecutionException;
@@ -11,14 +12,11 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-
 /**
  * A Maven2 plugin Goal to install a module description in the targeted OpenCms.
  *
  * @goal module
  */
-
-//(C) comundus GmbH, D-71332 WAIBLINGEN, www.comundus.com
 public class ModuleMojo extends AbstractVfsMojo {
     /**
      * The _opencmsshell class to instantiate within our custom ClassLoader.
@@ -31,11 +29,11 @@ public class ModuleMojo extends AbstractVfsMojo {
     private static final Class[] SHELLPARAMETERS = new Class[] {
             String.class, String.class, String.class, String.class
         };
-    
+
     /**
      * Path to source file with module XML configuration as in manifest.xml or opencms-modules.xml.
      *
-     * @parameter expression="${basedir}/src/main/opencms-module/opencms-module.xml"
+     * @parameter default-value="${basedir}/src/main/opencms-module/opencms-module.xml"
      * @required
      */
     private String moduleSourcePath;

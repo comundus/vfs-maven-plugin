@@ -57,7 +57,9 @@ under the License.
   
   <!-- Checks that a package.html file exists for each package.     -->
   <!-- See http://checkstyle.sf.net/config_javadoc.html#PackageHtml -->
-  <module name="JavadocPackage"/>
+  <module name="JavadocPackage">
+	<property name="severity" value="info"/>
+  </module>
   
   <!-- Checks whether files end with a new line.                        -->
   <!-- See http://checkstyle.sf.net/config_misc.html#NewlineAtEndOfFile -->
@@ -74,7 +76,9 @@ under the License.
       <property name="suppressLoadErrors" value="true"/>
       <metadata name="net.sf.eclipsecs.core.lastEnabledSeverity" value="info"/>
     </module>
-    <module name="JavadocType"/>
+    <module name="JavadocType">
+	  <property name = "allowUnknownTags" value="true"/>
+    </module>
     <!--
     <module name="JavadocVariable"/>
     -->
@@ -248,7 +252,7 @@ under the License.
     <property name="message" value="Consecutive empty lines"/>
   </module>
   <module name="RegexpHeader">
-    <property name="severity" value="info"/>
+    <property name="severity" value="warning"/>
     <property name="header" value="^// ?\(C\) (\d{4} )?comundus GmbH, D-71332 WAIBLINGEN, www\.comundus\.com$\n^package .*$"/>
     <property name="fileExtensions" value="java"/>
   </module>

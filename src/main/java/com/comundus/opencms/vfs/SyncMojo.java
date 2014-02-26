@@ -32,7 +32,7 @@ public class SyncMojo extends AbstractVfsMojo {
      * Source directory storing synchronized VFS content. Includes a
      * #synclist.txt file which is NOT to be checked into version control.
      *
-     * @parameter expression="${basedir}/src/main/vfs"
+     * @parameter default-value="${basedir}/src/main/vfs"
      * @required
      */
     private String syncSourceDirectory;
@@ -43,7 +43,7 @@ public class SyncMojo extends AbstractVfsMojo {
      * metadata are stored in a file with ".xml" appended to the original content
      * file name.
      *
-     * @parameter expression="${basedir}/src/main/vfs-metadata"
+     * @parameter default-value="${basedir}/src/main/vfs-metadata"
      * @required
      */
     private String syncMetadataDirectory;

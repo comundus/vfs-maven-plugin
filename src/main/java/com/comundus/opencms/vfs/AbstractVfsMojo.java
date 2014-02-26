@@ -1,3 +1,4 @@
+//(C) comundus GmbH, D-71332 WAIBLINGEN, www.comundus.com
 package com.comundus.opencms.vfs;
 
 import org.apache.maven.artifact.Artifact;
@@ -23,12 +24,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-
 /**
  * Abstract base class for VFS mojos.
  */
-
-//(C) comundus GmbH, D-71332 WAIBLINGEN, www.comundus.com
 public abstract class AbstractVfsMojo extends AbstractMojo {
     /**
      * The custom classloader. With WEB-INF/lib jars plus Servlet and JSP.
@@ -57,7 +55,7 @@ public abstract class AbstractVfsMojo extends AbstractMojo {
     /**
      * The directory where the webapp is built.
      *
-     * @parameter expression="${basedir}/../webapp/target/webapp"
+     * @parameter default-value="${basedir}/../webapp/target/webapp"
      * @required
      */
     private String webappDirectory;
@@ -65,7 +63,7 @@ public abstract class AbstractVfsMojo extends AbstractMojo {
     /**
      * Servlet API version to add to classpath.
      *
-     * @parameter expression="2.4"
+     * @parameter default-value="2.4"
      * @required
      */
     private String servletVersion;
@@ -73,7 +71,7 @@ public abstract class AbstractVfsMojo extends AbstractMojo {
     /**
      * JSP API version to add to classpath.
      *
-     * @parameter expression="2.0"
+     * @parameter default-value="2.0"
      * @required
      */
     private String jspVersion;
@@ -117,10 +115,10 @@ public abstract class AbstractVfsMojo extends AbstractMojo {
     private List remoteArtifactRepositories;
 
     /**
-     * true if the goals of this plugin have to be skipped
+     * true if the goals of this plugin have to be skipped.
      * May be set with -DskipVfs=true
      *
-     * @parameter property="skipVfs" default-value="false" 
+     * @parameter property="skipVfs" default-value="false"
      */
     private boolean skipVfs;
 
@@ -144,13 +142,13 @@ public abstract class AbstractVfsMojo extends AbstractMojo {
                 "classes" + File.separatorChar;
             String webinflibdir = this.webappDirectory + File.separatorChar +
                 "WEB-INF" + File.separatorChar + "lib";
-            
-            File fWebinfLibDir= new File(webinflibdir);
-            if(!fWebinfLibDir.isDirectory()){
+
+            File fWebinfLibDir = new File(webinflibdir);
+            if (!fWebinfLibDir.isDirectory()) {
         	throw new RuntimeException("WEB-INF/lib could not be found or it is not a directory");
             }
-            
-            File[] res=fWebinfLibDir.listFiles();
+
+            File[] res = fWebinfLibDir.listFiles();
             Arrays.sort(res); // in order to get our "underscore"-jars first in the search path
 
             ArrayList list = new ArrayList();
@@ -224,13 +222,13 @@ public abstract class AbstractVfsMojo extends AbstractMojo {
         return this.adminPassword;
     }
 
-    /** 
+    /**
      * @return true if the goals of this plugin must be skipped
      */
     public final boolean isSkipVfs() {
         return this.skipVfs;
     }
-    
+
     /**
     * @see org.apache.maven.plugin.Mojo
     * @throws MojoExecutionException An exception occuring during the execution of a plugin

@@ -22,7 +22,7 @@ public class CleanMojo extends AbstractVfsMojo {
      *
      * Contains a #synclist.txt which is NOT checked into version control.
      *
-     * @parameter expression="${basedir}/src/main/vfs"
+     * @parameter default-value="${basedir}/src/main/vfs"
      * @required
      */
     private String syncSourceDirectory;
@@ -42,8 +42,8 @@ public class CleanMojo extends AbstractVfsMojo {
      * to be a non-VFS project in a multi project build.
      */
     public final void execute() {
-    	
-    	if (this.isSkipVfs()){
+
+    	if (this.isSkipVfs()) {
     		this.getLog().info("Skipping VFS plugin");
     		return;
     	}

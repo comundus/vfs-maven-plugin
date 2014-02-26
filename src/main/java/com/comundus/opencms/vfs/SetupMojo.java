@@ -1,3 +1,4 @@
+//(C) comundus GmbH, D-71332 WAIBLINGEN, www.comundus.com
 package com.comundus.opencms.vfs;
 
 import org.apache.maven.plugin.MojoExecutionException;
@@ -10,14 +11,11 @@ import java.lang.reflect.Method;
 
 import java.util.List;
 
-
 /**
  * A Maven2 plugin Goal to initialize VFS after creating the tables.
  *
  * @goal setup
  */
-
-//(C) comundus GmbH, D-71332 WAIBLINGEN, www.comundus.com
 public class SetupMojo extends AbstractVfsMojo {
     /**
      * The _opencmsshell class to instantiate within our custom ClassLoader.
@@ -34,7 +32,7 @@ public class SetupMojo extends AbstractVfsMojo {
     /**
      * Path to the standard OpenCms module ZIPs.
      *
-     * @parameter expression="${basedir}/src/main/opencms-modules"
+     * @parameter default-value="${basedir}/src/main/opencms-modules"
      * @required
      */
     private String opencmsmoduleSourceDirectory;
@@ -55,13 +53,13 @@ public class SetupMojo extends AbstractVfsMojo {
      * @throws MojoExecutionException in case anything goes wrong
      */
     public final void execute() throws MojoExecutionException {
-    	if (this.isSkipVfs()){
+    	if (this.isSkipVfs()) {
     		this.getLog().info("Skipping VFS plugin");
     		return;
     	}
-    	
+
     	this.getLog().info("Executing SetupMojo");
-    	
+
         ClassLoader originalClassLoader = Thread.currentThread()
                                                 .getContextClassLoader();
         // ClassLoader classloader = this.getClassLoader();

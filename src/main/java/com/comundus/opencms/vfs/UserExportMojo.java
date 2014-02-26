@@ -1,3 +1,4 @@
+//(C) comundus GmbH, D-71332 WAIBLINGEN, www.comundus.com
 package com.comundus.opencms.vfs;
 
 import org.apache.maven.plugin.MojoExecutionException;
@@ -8,15 +9,12 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-
 /**
  * A Maven2 plugin Goal to export user/group data from OpenCms into a source
  * folder.
  *
  * @goal exportusers
  */
-
-//(C) comundus GmbH, D-71332 WAIBLINGEN, www.comundus.com
 public class UserExportMojo extends AbstractVfsMojo {
     /**
      * The _opencmsshell class to instantiate within our custom ClassLoader.
@@ -33,7 +31,7 @@ public class UserExportMojo extends AbstractVfsMojo {
     /**
      * Source folder with OpenCms userdata.
      *
-     * @parameter expression="${basedir}/src/main/opencms-usergroups"
+     * @parameter default-value="${basedir}/src/main/opencms-usergroups"
      * @required
      */
     private String usergroupsSourceDirectory;
@@ -45,7 +43,7 @@ public class UserExportMojo extends AbstractVfsMojo {
      *             in case anything goes wrong
      */
     public final void execute() throws MojoExecutionException {
-    	if (this.isSkipVfs()){
+    	if (this.isSkipVfs()) {
     		this.getLog().info("Skipping VFS plugin");
     		return;
     	}
