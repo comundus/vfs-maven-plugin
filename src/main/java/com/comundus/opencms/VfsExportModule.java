@@ -1,3 +1,4 @@
+//(C) comundus GmbH, D-71332 WAIBLINGEN, www.comundus.com
 package com.comundus.opencms;
 
 import java.io.File;
@@ -17,22 +18,19 @@ import org.opencms.report.CmsShellReport;
 import org.opencms.report.I_CmsReport;
 import org.xml.sax.SAXException;
 
-
 /**
  * Adds a module to WEB-INF/config/opencms-modules.xml.
  */
-
-//(C) comundus GmbH, D-71332 WAIBLINGEN, www.comundus.com
 public class VfsExportModule {
     /** The CmsObject. */
     private CmsObject cms;
 
     private String moduleVersion;
 
-	private I_CmsReport report;
-    
+    private I_CmsReport report;
+
     /**
-     * 
+     *
      * Exports a module from the configured OpenCms
      * Installs a module description in the target OpenCms. Module description
      * comes from the path given in the parameter configurationXml. The XML file
@@ -47,8 +45,10 @@ public class VfsExportModule {
      *            path to WEB-INF of the OpenCms installation
      * @param adminPassword
      *            password of user "Admin" performing the operation
-     * @param moduleSourcePath
-     *            path to module xml configuration file
+     * @param moduleName
+     *            name of the module
+     * @param targetPath
+     *            path of the folder where the module will be exported
      * @throws CmsException
      *             if anything OpenCms goes wrong
      * @throws IOException
@@ -59,51 +59,49 @@ public class VfsExportModule {
     public final void execute(final String webappDirectory,
         final String adminPassword, final String moduleName, final String targetPath)
         throws IOException, CmsException, SAXException {
-    	
+
         final String webinfdir = webappDirectory + File.separatorChar +
             "WEB-INF";
         final CmOpenCmsShell cmsshell = CmOpenCmsShell.getInstance(webinfdir,
                 "Admin", adminPassword);
-        
+
         if (cmsshell != null) {
             this.cms = cmsshell.getCmsObject();
 
             final CmsRequestContext requestcontext = this.cms.getRequestContext();
             requestcontext.setCurrentProject(this.cms.readProject("Offline"));
-            
+
             this.setReport(new CmsShellReport(requestcontext.getLocale()));
-        
+
             exportModule(moduleName, targetPath, cmsshell.getCmsObject());
-        }else{
-        	System.err.println("[WARN]VfsExportModule.execute(): CmsShell not available");
+        } else {
+            System.err.println("[WARN]VfsExportModule.execute(): CmsShell not available");
         }
-    }    
-    
+    }
+
     /**
      * Taken from org.opencms.main.CmsShellCommands<p>
      * Exports the module with the given name to the default location.<p>
-     * 
+     *
      * @param moduleName the name of the module to export
-     * @throws CmsException 
-     * 
-     * @throws Exception if something goes wrong
+     * @param targetFolder target folder
+     * @param cms initialized {@code CmsObject}
+     * @throws CmsException if something goes wrong
      */
-    public void exportModule(String moduleName,String targetFolder,CmsObject cms) throws CmsException  {
+    public void exportModule(String moduleName, String targetFolder, CmsObject cms) throws CmsException  {
 
-    	I_CmsReport report=new CmsShellReport(cms.getRequestContext().getLocale());
-    	
+    	I_CmsReport report = new CmsShellReport(cms.getRequestContext().getLocale());
+
         CmsModule module = OpenCms.getModuleManager().getModule(moduleName);
 
         if (module == null) {
             throw new CmsDbEntryNotFoundException(Messages.get().container(Messages.ERR_UNKNOWN_MODULE_1, moduleName));
         }
-        
+
         createFolder(targetFolder);
         String filename = OpenCms.getSystemInfo().getAbsoluteRfsPathRelativeToWebInf(
-        		targetFolder
-                + moduleName
-                + "_"
-                + OpenCms.getModuleManager().getModule(moduleName).getVersion().toString());
+        		targetFolder + moduleName + "_" +
+        		OpenCms.getModuleManager().getModule(moduleName).getVersion().toString());
 
         String[] resources = new String[module.getResources().size()];
         System.arraycopy(module.getResources().toArray(), 0, resources, 0, resources.length);
@@ -120,50 +118,47 @@ public class VfsExportModule {
         // export the module
         OpenCms.getImportExportManager().exportData(
             cms,
-            moduleExportHandler,report);
-        report("Module "+moduleName+" exported to: "+filename,I_CmsReport.FORMAT_HEADLINE);
-
-//        System.out.println(this.getClass().getName()+" Module exported to "+targetPath);        
+            moduleExportHandler, report);
+        report("Module " + moduleName + " exported to: " + filename, I_CmsReport.FORMAT_HEADLINE);
     }
 
     private void createFolder(String folder) throws CmsException {
 
-    	File fFolder=new File(folder);
-    	if(fFolder.exists()){
-    		if(fFolder.isDirectory()){
-    			//The folder already exists
-    			return;
-    		}else{
-    			//A file with the name of the requested folder already exists
-    			throw new CmsException(Messages.get().container(org.opencms.report.Messages.RPT_ARGUMENT_1,
-    					"vfs:export-module: A file with the name of the requested folder already exists: "+fFolder));
-    		}
-    	}else{
-    		//Create the folder
-    		if(!fFolder.mkdirs()){
-    			throw new CmsException(Messages.get().container(org.opencms.report.Messages.RPT_ARGUMENT_1,
-    					"vfs:export-module: Could not create folder: "+fFolder));    			
-    		}
-    	}		
+	File fFolder = new File(folder);
+	if (fFolder.exists()) {
+	    if (fFolder.isDirectory()) {
+		//The folder already exists
+		return;
+	    } else {
+		//A file with the name of the requested folder already exists
+		throw new CmsException(Messages.get().container(org.opencms.report.Messages.RPT_ARGUMENT_1,
+			"vfs:export-module: A file with the name of the requested folder already exists: " + fFolder));
+	    }
+	} else {
+	    //Create the folder
+	    if (!fFolder.mkdirs()) {
+		throw new CmsException(Messages.get().container(org.opencms.report.Messages.RPT_ARGUMENT_1,
+			"vfs:export-module: Could not create folder: "+fFolder));
+	    }
 	}
-
-	/**
-     * 
-     * @param msg
-     * @param format
-     */
-    protected void report(String msg, int format) {
-    	this.getReport()
-    	.println(org.opencms.report.Messages.get()
-    			.container(org.opencms.report.Messages.RPT_ARGUMENT_1,
-    					msg,format));		
     }
 
+    /**
+     *
+     * @param msg Message
+     * @param format Format from the constants in {@link I_CmsReport}
+     */
+    protected void report(String msg, int format) {
+	this.getReport()
+	.println(org.opencms.report.Messages.get()
+		.container(org.opencms.report.Messages.RPT_ARGUMENT_1,
+			msg, format));
+    }
 
-	private CmsMessages getMessages() {
-		return Messages.get().getBundle();
-	}
-	
+    private CmsMessages getMessages() {
+	return Messages.get().getBundle();
+    }
+
     /**
      * gets the Cms Report.
      * @return the Cms Report
@@ -183,5 +178,4 @@ public class VfsExportModule {
     public final void setReport(final I_CmsReport preport) {
         this.report = preport;
     }
-
 }
