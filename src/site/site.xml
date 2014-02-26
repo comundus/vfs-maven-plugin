@@ -2,6 +2,7 @@
    <body>
     <menu name="Overview">
       <item name="Plugin Goals" href="plugin-info.html"/>
+      <item name="Continuous Integration" href="integration.html"/>
       <!-- item name="Introduction" href="introduction.html"/ -->
       <!-- item name="How to Use" href="howto.html"/ -->
     </menu>
