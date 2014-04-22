@@ -28,7 +28,7 @@ import org.opencms.file.CmsRequestContext;
 import org.opencms.file.CmsResource;
 import org.opencms.file.CmsResourceFilter;
 import org.opencms.file.types.I_CmsResourceType;
-
+import org.opencms.flex.CmsFlexCache;
 import org.opencms.i18n.CmsEncoder;
 import org.opencms.i18n.CmsMessageContainer;
 import org.opencms.importexport.CmsImportExportException;
@@ -206,9 +206,25 @@ public class VfsSync extends XmlHandling {
         this.doTheSync(syncResources);
         rewriteParseables();
         importRelations();
+        
+		// clear all OpenCms caches
+		clearAllCaches();
+        
         this.getCms().unlockProject(offlineProject.getUuid());
     }
 
+	private void clearAllCaches() {
+		OpenCms.fireCmsEvent(I_CmsEventListener.EVENT_CLEAR_CACHES,
+				Collections.<String, Object> emptyMap());
+		OpenCms.fireCmsEvent(new CmsEvent(
+				I_CmsEventListener.EVENT_FLEX_PURGE_JSP_REPOSITORY, Collections
+						.<String, Object> emptyMap()));
+		OpenCms.fireCmsEvent(new CmsEvent(
+				I_CmsEventListener.EVENT_FLEX_CACHE_CLEAR, Collections
+						.<String, Object> singletonMap("action", new Integer(
+								CmsFlexCache.CLEAR_ENTRIES))));
+	}
+    
     /*
     Methodenabfolge der Synchronisation (pro konfiguriertem VFS Pfad):
     syncVfsToRfs(sourcePathInVfs);          (recursive)
