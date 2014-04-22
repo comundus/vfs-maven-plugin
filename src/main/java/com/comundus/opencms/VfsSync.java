@@ -2802,16 +2802,12 @@ public class VfsSync extends XmlHandling {
     }
 
     private boolean isIgnorableFile(File file) {
-	if (file == null) {
-	    return true;
-	}
+    	if (file == null) {
+    		return true;
+    	}
         if (!file.exists()) {
             return true;
         }
-        if (file.isHidden()) { // don't balk at .svn
-            return true;
-        }
-
         if (file.getAbsolutePath().endsWith(File.separator + ".svn")) { // Det did see not hidden .svn folders in his life ...
             return true;
         }
