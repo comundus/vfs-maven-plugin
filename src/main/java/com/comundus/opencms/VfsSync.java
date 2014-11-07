@@ -2818,13 +2818,14 @@ public class VfsSync extends XmlHandling {
     }
 
     private boolean isIgnorableFile(File file) {
+	//TODO: Make list of ignorable files configurable
     	if (file == null) {
     		return true;
     	}
         if (!file.exists()) {
             return true;
         }
-        if (file.getAbsolutePath().endsWith(File.separator + ".svn")) { // Det did see not hidden .svn folders in his life ...
+        if (file.getAbsolutePath().endsWith(File.separator + ".svn")) {
             return true;
         }
         if (file.getAbsolutePath().endsWith(File.separator + "CVS")) {
