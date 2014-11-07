@@ -7,6 +7,10 @@
         <author email="a.rodriguez@comundus.com">Adrian Rodriguez</author>
     </properties>
     <body>
+    	<release version="9.0.1b" date="2014-02-26" description="">
+    		<action dev="Alexey Chirkov" type="update">vfs-sync:Add OpenCms cache clear after VFS resource syncronization</action>
+    		<action dev="Alexey Chirkov" type="update">vfs-sync:Do not ignore hidden files</action>
+    	</release>
     	<release version="9.0.1a" date="2014-02-26" description="">
     		<action dev="ar" type="update">Checkstyle and PMD configuration are retrieved from the maven repository</action>
     	</release>
