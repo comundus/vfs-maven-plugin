@@ -1,3 +1,4 @@
+//(C) comundus GmbH, D-71332 WAIBLINGEN, www.comundus.com
 package com.comundus.opencms;
 
 import org.dom4j.Document;
@@ -28,18 +29,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
 
 /**
  * Base class containing some common stuff for VFS and user/groups
  * synchronizing.
  */
-
-//(C) comundus GmbH, D-71332 WAIBLINGEN, www.comundus.com
 public class XmlHandling {
     /** The CmsObject. */
     private CmsObject cms;
@@ -62,6 +59,8 @@ public class XmlHandling {
      * Directory for user/groups import/export.
      */
     private String usergroupsSourceDirectory;
+
+    private boolean debugEnabled = false;
 
     /**
      * Opens the metadata file and initializes the internal XML document for the
@@ -320,14 +319,24 @@ public class XmlHandling {
             return null;
         }
     }
-    
-    protected void simpleReport(String msg) {
 
-    	report("[DEBUG] "+msg,I_CmsReport.FORMAT_DEFAULT);
-	}
+    protected void infoReport(String msg) {
+
+    	report("[INFO] " + msg,I_CmsReport.FORMAT_DEFAULT);
+    }
+
+    protected void debugReport(String msg) {
+        if (this.isDebugEnabled()) {
+            report("[DEBUG] " + msg, I_CmsReport.FORMAT_DEFAULT);
+        }
+    }
+
+    protected void simpleReport(String msg) {
+        simpleReport(msg);
+    }
 
     /**
-     * 
+     *
      * @param msg
      * @param format
      */
@@ -335,7 +344,7 @@ public class XmlHandling {
 		this.getReport()
 			.println(org.opencms.report.Messages.get()
 					.container(org.opencms.report.Messages.RPT_ARGUMENT_1,
-							msg,format));		
+							msg, format));
 	}
 
     /**
@@ -358,6 +367,14 @@ public class XmlHandling {
         	}
         }
         return new ArrayList<SyncResource>(mergedList.values());
+    }
+
+    public boolean isDebugEnabled() {
+        return debugEnabled;
+    }
+
+    public void setDebugEnabled(boolean debugEnabled) {
+        this.debugEnabled = debugEnabled;
     }
 
 }

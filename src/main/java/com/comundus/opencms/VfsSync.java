@@ -3,6 +3,7 @@ package com.comundus.opencms;
 
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
@@ -14,10 +15,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringTokenizer;
 
+import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.dom4j.Attribute;
 import org.dom4j.Element;
 import org.opencms.db.CmsDbIoException;
@@ -77,6 +81,13 @@ public class VfsSync extends XmlHandling {
     /** Filename of the synclist file on the server FS. */
     static final String SYNCLIST_FILENAME = "#synclist.txt";
 
+    /** The files and directories in the RFS with these name patterns will be ignored. The original list is taken from ANT:
+     * http://ant.apache.org/manual/dirtasks.html#defaultexcludes */
+    private static final String[]  DEFAULT_IGNORED_NAMES = new String[] {
+	"*~", "#*#", ".#*", "%*%", "._*", "CVS", ".cvsignore", "SCCS", "vssver.scc", ".svn", ".DS_Store",
+	".git", ".gitattributes", ".gitignore", ".gitmodules", ".hg", ".hgignore", ".hgsub", ".hgsubstate", ".hgtags",
+	".bzr", ".bzrignore"};
+
     /**
      * The path in the "real" file system where the resources have to be
      * synchronized to.
@@ -110,6 +121,8 @@ public class VfsSync extends XmlHandling {
     /** Stores all resources of any type that implements the {@link I_CmsLinkParseable} interface. */
     private List m_parseables;
 
+    private FileFilter ignoredFilesFilter;
+
     /**
      * Synchronizes a given List of paths in VFS with a path in RFS; a second
      * path in RFS stores metadata for the VFS files. Metadata folder structure
@@ -133,84 +146,91 @@ public class VfsSync extends XmlHandling {
      *            List of paths in VFS to synchronize
      * @param syncResources
      *            List of {@code <syncResource>} with resources to synchronize
+     * @param ignoredNames
+     *            List of name patterns to add to the ignored list
+     * @param notIgnoredNames
+     *            List of name patterns to remove from the ignored list
      * @param adminPassword
      *            password of user "Admin" performing the operation
      * @throws Exception
      *             if anything goes wrong
      */
     public final void execute(final String webappDirectory,
-        final String dPathInRfs, final String mPathInRfs,
-        final List<String> syncVFSPaths, List<SyncResource> syncResources,
-        final String adminPassword)
-        throws Exception {
+	    final String dPathInRfs, final String mPathInRfs,
+	    final List<String> syncVFSPaths, List<SyncResource> syncResources,
+	    final List<String> ignoredNames, List<String> notIgnoredNames,
+	    final String adminPassword)
+	    throws Exception {
 
-        this.destinationPathInRfs = dPathInRfs;
-        this.metadataPathInRfs = mPathInRfs;
-        this.count = 1;
+	this.destinationPathInRfs = dPathInRfs;
+	this.metadataPathInRfs = mPathInRfs;
+	this.count = 1;
 
-        this.m_parseables = new ArrayList();
-        this.m_importedRelations = new HashMap();
+	this.m_parseables = new ArrayList();
+	this.m_importedRelations = new HashMap();
 
-        final String webinfdir = webappDirectory + File.separatorChar +
-            "WEB-INF";
-        final CmOpenCmsShell cmsshell = CmOpenCmsShell.getInstance(webinfdir,
-                "Admin", adminPassword);
-        this.setCms(cmsshell.getCmsObject());
+	final String webinfdir = webappDirectory + File.separatorChar +
+		"WEB-INF";
+	final CmOpenCmsShell cmsshell = CmOpenCmsShell.getInstance(webinfdir,
+		"Admin", adminPassword);
+	this.setCms(cmsshell.getCmsObject());
 
-        final CmsRequestContext requestcontext = this.getCms()
-                                                     .getRequestContext();
-        this.setReport(new CmsShellReport(requestcontext.getLocale()));
+	final CmsRequestContext requestcontext = this.getCms()
+		.getRequestContext();
+	this.setReport(new CmsShellReport(requestcontext.getLocale()));
 
-        final CmsProject offlineProject = this.getCms().readProject("Offline");
-        requestcontext.setCurrentProject(offlineProject);
-        // do the synchronization only if the synchronization folders in
-        // the VFS and the FS are valid
-        // store the current site root
-        // I think we don't need that here
-        // requestcontext.saveSiteRoot();
-        // set site to root site
-        requestcontext.setSiteRoot("/");
+	final CmsProject offlineProject = this.getCms().readProject("Offline");
+	requestcontext.setCurrentProject(offlineProject);
+	// do the synchronization only if the synchronization folders in
+	// the VFS and the FS are valid
+	// store the current site root
+	// I think we don't need that here
+	// requestcontext.saveSiteRoot();
+	// set site to root site
+	requestcontext.setSiteRoot("/");
 
-        // code taken from org.opencms.synchronize.CmsSynchronize
-        // OpenCms.fireCmsEvent(new
-        // CmsEvent(I_CmsEventListener.EVENT_CLEAR_CACHES,
-        // Collections.EMPTY_MAP));
-        // OpenCms.fireCmsEvent(new
-        // CmsEvent(I_CmsEventListener.EVENT_CLEAR_OFFLINE_CACHES,
-        // Collections.EMPTY_MAP));
-        // check if target folder exists and is writeable
-        final File destinationFolder = new File(this.destinationPathInRfs);
+	// code taken from org.opencms.synchronize.CmsSynchronize
+	// OpenCms.fireCmsEvent(new
+	// CmsEvent(I_CmsEventListener.EVENT_CLEAR_CACHES,
+	// Collections.EMPTY_MAP));
+	// OpenCms.fireCmsEvent(new
+	// CmsEvent(I_CmsEventListener.EVENT_CLEAR_OFFLINE_CACHES,
+	// Collections.EMPTY_MAP));
+	// check if target folder exists and is writeable
+	final File destinationFolder = new File(this.destinationPathInRfs);
 
-        if (!destinationFolder.exists() || !destinationFolder.isDirectory()) {
-            // destination folder does not exist
-            throw new CmsSynchronizeException(org.opencms.synchronize.Messages.get()
-                                            .container(org.opencms.synchronize.Messages.ERR_RFS_DESTINATION_NOT_THERE_1,
-                    this.destinationPathInRfs));
-        }
+	if (!destinationFolder.exists() || !destinationFolder.isDirectory()) {
+	    // destination folder does not exist
+	    throw new CmsSynchronizeException(org.opencms.synchronize.Messages.get()
+		    .container(org.opencms.synchronize.Messages.ERR_RFS_DESTINATION_NOT_THERE_1,
+			    this.destinationPathInRfs));
+	}
 
-        if (!destinationFolder.canWrite()) {
-            // destination folder can't be written to
-            throw new CmsSynchronizeException(org.opencms.synchronize.Messages.get()
-                                            .container(org.opencms.synchronize.Messages.ERR_RFS_DESTINATION_NO_WRITE_1,
-                    this.destinationPathInRfs));
-        }
+	if (!destinationFolder.canWrite()) {
+	    // destination folder can't be written to
+	    throw new CmsSynchronizeException(org.opencms.synchronize.Messages.get()
+		    .container(org.opencms.synchronize.Messages.ERR_RFS_DESTINATION_NO_WRITE_1,
+			    this.destinationPathInRfs));
+	}
 
-        // clear all caches
-        // m_report.println(Messages.get().container(org.opencms.importexport.Messages.RPT_CLEARCACHE_0),
-        // I_CmsReport.FORMAT_NOTE);
-        // OpenCms.fireCmsEvent(new
-        // CmsEvent(I_CmsEventListener.EVENT_CLEAR_CACHES,
-        // Collections.EMPTY_MAP));
-        syncResources = mergeSyncResourceLists(syncVFSPaths, syncResources);
+	// clear all caches
+	// m_report.println(Messages.get().container(org.opencms.importexport.Messages.RPT_CLEARCACHE_0),
+	// I_CmsReport.FORMAT_NOTE);
+	// OpenCms.fireCmsEvent(new
+	// CmsEvent(I_CmsEventListener.EVENT_CLEAR_CACHES,
+	// Collections.EMPTY_MAP));
+	syncResources = mergeSyncResourceLists(syncVFSPaths, syncResources);
 
-        this.doTheSync(syncResources);
-        rewriteParseables();
-        importRelations();
-        
-		// clear all OpenCms caches
-		clearAllCaches();
-        
-        this.getCms().unlockProject(offlineProject.getUuid());
+	computeIgnoredNames(ignoredNames, notIgnoredNames);
+
+	doTheSync(syncResources);
+	rewriteParseables();
+	importRelations();
+
+	// clear all OpenCms caches
+	clearAllCaches();
+
+	this.getCms().unlockProject(offlineProject.getUuid());
     }
 
 	private void clearAllCaches() {
@@ -224,7 +244,7 @@ public class VfsSync extends XmlHandling {
 						.<String, Object> singletonMap("action", new Integer(
 								CmsFlexCache.CLEAR_ENTRIES))));
 	}
-    
+
     /*
     Methodenabfolge der Synchronisation (pro konfiguriertem VFS Pfad):
     syncVfsToRfs(sourcePathInVfs);          (recursive)
@@ -316,9 +336,9 @@ public class VfsSync extends XmlHandling {
         final File fsFile = this.getFileInRfs(syncResource.getResource());
 
         if (isIgnorableFile(fsFile)) {
+            debugReport("copyFromRFS. Ignore: " + fsFile.getName());
             return;
         }
-
         boolean doRecursion = true;
         // Only for directories
         if (fsFile.isDirectory()) {
@@ -398,15 +418,20 @@ public class VfsSync extends XmlHandling {
 
         // now loop through all resources
         for (int i = 0; i < res.length; i++) {
+                debugReport("VfsSync.copyFromRfs: " + res[i].getName());
+
         	if (isIgnorableFile(res[i])) {
+        	    debugReport("copyFromRFS(recursing). Ignore: " + res[i].getName());
         	    continue;
-        	}
+                } else {
+                    debugReport("copyFromRFS(recursing). Accept: " + res[i].getName());
+                }
 
         	// get the relative filename
         	String resname = res[i].getAbsolutePath();
 
 		if (resourceIsInExcludesArray(this.getFilenameInVfs(res[i]), syncResource.getExcludes())) {
-		    //simpleReport("Not checking "+resname+" in copyFromRfs because it is in the excludes list");
+		    debugReport("VfsSync.copyFromRfs: Not checking " + resname + " in copyFromRfs because it is in the excludes list");
 		    continue;
 		}
 
@@ -428,16 +453,16 @@ public class VfsSync extends XmlHandling {
         			// do a recursion if the current resource is a folder
         			// and the resource is not included in the excludeslist
         			if (doRecursion) {
-        				//simpleReport("Recursion over "+resname+"/");
+        				debugReport("VfsSync.copyFromRfs: Recursion over " + resname + "/");
         				this.copyFromRfs(new SyncResource(resname + "/", syncResource.getExcludes()));
         			} else {
-        				//simpleReport("Not doing recursion over "+resname+"/");
+        				debugReport("VfsSync.copyFromRfs: Not doing recursion over " + resname + "/");
         			    	throw new RuntimeException("Not doing recursion over " + resname +
         			    		                   ". Please check syncVfsPaths and syncResources");
         			}
         		}
         	} else {
-        		//simpleReport("VfsSync.copyFromRfs: Not copying "+resname+" because it is in the remove list");
+        		debugReport("VfsSync.copyFromRfs: Not copying " + resname + " because it is in the remove list");
         	}
         }
 
@@ -993,20 +1018,22 @@ public class VfsSync extends XmlHandling {
 
         	//Do not check if the resource is in the excludes list
         	if (syncResourcesContainsExclude(syncResources, res[i])) {
-        		//simpleReport("Not recursing deletion into "+res[i]+" because it is in the excludes list");
+        		debugReport("Not recursing deletion into "+res[i]+" because it is in the excludes list");
         		continue;
         	}
 
             // recurse if it is a directory, we must go depth first to delete
             // files
             final String abspath = res[i].getAbsolutePath();
+            debugReport("removeFromRFS: " + abspath);
+
             if ((res[i].isDirectory()) && (!res[i].isHidden()) &&
-                    (!abspath.endsWith(File.separator + "CVS"))) {
-            	this.removeFromRfs(abspath,syncResources);
+                    (!isIgnorableFile(new File(abspath)))) {
+            	this.removeFromRfs(abspath, syncResources);
 
             // Also recurse if the file is in the syncResources
-            }else if(res[i].isFile() && removingFolder && syncResourcesContainsResource(syncResources,res[i])){
-            	this.removeFromRfs(abspath,syncResources);
+            } else if (res[i].isFile() && removingFolder && syncResourcesContainsResource(syncResources, res[i])) {
+            	this.removeFromRfs(abspath, syncResources);
             }
 
             // now check if this resource is still in the old sync list.
@@ -1028,9 +1055,9 @@ public class VfsSync extends XmlHandling {
                 if (!isIgnorableFile(res[i])) {
                     this.getReport()
                         .println(org.opencms.report.Messages.get()
-                                                            .container(org.opencms.report.Messages.RPT_ARGUMENT_1,
+                            .container(org.opencms.report.Messages.RPT_ARGUMENT_1,
                             "WARNING: please remove " + abspath),
-                        I_CmsReport.FORMAT_WARNING);
+                            I_CmsReport.FORMAT_WARNING);
 
                     final File metadataFile = this.getMetadataFileInRfs(vfsFile);
 
@@ -2818,22 +2845,32 @@ public class VfsSync extends XmlHandling {
     }
 
     private boolean isIgnorableFile(File file) {
-	//TODO: Make list of ignorable files configurable
+
     	if (file == null) {
     		return true;
     	}
         if (!file.exists()) {
             return true;
         }
-        if (file.getAbsolutePath().endsWith(File.separator + ".svn")) {
-            return true;
+
+        return this.ignoredFilesFilter.accept(file);
+    }
+
+    private void computeIgnoredNames(List<String> ignoredNames, List<String> notIgnoredNames) {
+
+        Set<String> ignoredGlobPatterns = new LinkedHashSet<String>();
+        for (String name : DEFAULT_IGNORED_NAMES) {
+            ignoredGlobPatterns.add(name);
         }
-        if (file.getAbsolutePath().endsWith(File.separator + "CVS")) {
-            return true;
+        if (ignoredNames != null) {
+            ignoredGlobPatterns.addAll(ignoredNames);
         }
-        if (file.getName().startsWith(".git")) {
-            return true;
+        if (notIgnoredNames != null) {
+            ignoredGlobPatterns.removeAll(notIgnoredNames);
         }
-        return false;
+
+        debugReport("VfsSync configuration. Ignored filename patterns: " + ignoredGlobPatterns);
+
+        this.ignoredFilesFilter = new WildcardFileFilter(new ArrayList(ignoredGlobPatterns));
     }
 }
