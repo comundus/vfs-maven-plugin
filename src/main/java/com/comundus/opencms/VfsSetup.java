@@ -8,8 +8,11 @@ import org.opencms.file.CmsObject;
 import org.opencms.file.CmsProject;
 import org.opencms.file.CmsRequestContext;
 import org.opencms.file.types.CmsResourceTypeFolder;
+import org.opencms.file.types.I_CmsResourceType;
 import org.opencms.main.CmOpenCmsShell;
+import org.opencms.main.CmsShell;
 import org.opencms.main.OpenCms;
+import org.opencms.security.CmsRole;
 
 
 /**
@@ -112,6 +115,7 @@ public class VfsSetup {
         // createPropertyDefinition template
         // createPropertyDefinition template-elements
         // createPropertyDefinition locale
+        // createPropertyDefinition config.sitemap
         cmsobject.createPropertyDefinition("Title");
         cmsobject.createPropertyDefinition("Description");
         cmsobject.createPropertyDefinition("Keywords");
@@ -126,6 +130,7 @@ public class VfsSetup {
         cmsobject.createPropertyDefinition("template");
         cmsobject.createPropertyDefinition("template-elements");
         cmsobject.createPropertyDefinition("locale");
+        cmsobject.createPropertyDefinition("config.sitemap");
         // # Switch to the root context
         // setSiteRoot "/"
         requestcontext.setSiteRoot("/");
@@ -135,21 +140,23 @@ public class VfsSetup {
         // createFolder "/" "channels/"	<= no longer in OpenCms 7
         // createFolder "/sites/" "default/"
         // createFolder "/system/" "lost-found/"
-		// createFolder "/system/" "modules/"
+	// createFolder "/system/" "modules/"
+        // createFolder "/" "shared/"
 
-        cmsobject.createResource("/sites/",
-            CmsResourceTypeFolder.RESOURCE_TYPE_ID);
+        I_CmsResourceType resourceTypeFolder = 
+                OpenCms.getResourceManager().getResourceType(CmsResourceTypeFolder.RESOURCE_TYPE_ID);
+        cmsobject.createResource("/sites/", resourceTypeFolder);
 
         // in order to avoid problems while synchronizing,
         // we do not create the folder here but have it created
         // from synchronizing VFS /sites/default/ in the webapp
         //cmsobject.createResource("/sites/default/",
         //CmsResourceTypeFolder.RESOURCE_TYPE_ID);
-        cmsobject.createResource("/system/lost-found/",
-            CmsResourceTypeFolder.RESOURCE_TYPE_ID);
+        cmsobject.createResource("/system/lost-found/", resourceTypeFolder);
 
-        cmsobject.createResource("/system/modules/",
-            CmsResourceTypeFolder.RESOURCE_TYPE_ID);
+        cmsobject.createResource("/system/modules/", resourceTypeFolder);
+        
+        cmsobject.createResource("/shared/", resourceTypeFolder);
 
         // # Apply folder permissions
         /* http://www.opencms.org/export/javadoc/core/org/opencms/security/CmsPermissionSet.html says:
@@ -189,9 +196,13 @@ public class VfsSetup {
         //cmsobject.chacc("/sites/default", "group", /*iomanager.translateGroup(*/"Users"/*)*/,
         //"+v+w+r+i");
 
+        // chacc "/shared" "group" "Users" "+v+w+r+i" 
+        cmsobject.chacc("/shared", "group", "Users",
+                "+v+w+r+i");
+        
         // # Publish the project
         // unlockCurrentProject
-        cmsobject.unlockProject(cmsobject.getRequestContext().currentProject()
+        cmsobject.unlockProject(cmsobject.getRequestContext().getCurrentProject()
                                          .getUuid());
         
         System.out.println("Project is going to be published");
@@ -200,28 +211,55 @@ public class VfsSetup {
         System.out.println("Publish sent. Waiting.");
        	OpenCms.getPublishManager().waitWhileRunning();
         System.out.println("Publish finished.");
+        
+        //# Create the default "Offline" project
+        //createDefaultProject "Offline" "The Offline Project"
+        createDefaultProject(cmsobject, "Offline", "The Offline Project");
+        
+        // The rest is not needed
+        //# Import the modules that have been selected in the setup wizard to the default site
+        //setSiteRoot "/sites/default/"
+        //importModulesFromSetupBean
 
-        System.out.println("Creating Offline project.");
-        // # Create the default "Offline" project
-        // createDefaultProject "Offline" "The Offline Project"
-        // code taken from org.opencms.main.CmsShellCommands (createDefaultProject)
-        final CmsDefaultUsers defaultusers = OpenCms.getDefaultUsers();
-        final CmsProject project = cmsobject.createProject("Offline",
-                "The Offline Project", defaultusers.getGroupUsers(),
-                defaultusers.getGroupProjectmanagers(),
-                CmsProject.PROJECT_TYPE_NORMAL);
-        requestcontext.setCurrentProject(project);
-        cmsobject.copyResourceToProject("/");
+        //# Rebuild search indexes
+        //rebuildAllIndexes
+
+        //exit
+    }
+    
+    /**
+     * Copied from {@link CmsShellCommands#createDefaultProject}
+     * Creates a default project.<p>
+     * 
+     * This created project has the following properties:<ul>
+     * <li>The users group is the default user group
+     * <li>The users group is also the default project manager group
+     * <li>All resources are contained in the project
+     * <li>The project will remain after publishing</ul>
+     * 
+     * @param name the name of the project to create
+     * @param description the description for the new project
+     * @throws Exception if something goes wrong
+     */
+    public void createDefaultProject(CmsObject cms, String name, String description) throws Exception {
+        System.out.println("Creating Offline project.");        
+
+        CmsProject project = cms.createProject(
+            name,
+            description,
+            OpenCms.getDefaultUsers().getGroupUsers(),
+            OpenCms.getDefaultUsers().getGroupUsers(),
+            CmsProject.PROJECT_TYPE_NORMAL);
+        cms.getRequestContext().setCurrentProject(project);
+        cms.copyResourceToProject("/");
+        
         System.out.println("Created Offline project.");
-        // setSiteRoot "/sites/default/"
-        // we don't need that
-        // requestcontext.setSiteRoot("/sites/default/");
-        // after that, the modules as configured during setup get imported
-
+        
         // new with OpenCms 6.2.3, but I think we don't need that for a freshly setup system
-        //if (m_cms.hasRole(CmsRole.SEARCH_MANAGER)) {
-        // re-initialize the search indexes after default project generation
-        //    OpenCms.getSearchManager().initialize(m_cms);
+        // if (OpenCms.getRoleManager().hasRole(cms, CmsRole.WORKPLACE_MANAGER)) {
+        //    // re-initialize the search indexes after default project generation
+        //    OpenCms.getSearchManager().initialize(cms);
         //}
     }
+
 }
