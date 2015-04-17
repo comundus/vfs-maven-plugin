@@ -1,6 +1,5 @@
 package org.opencms.main;
 
-import org.apache.commons.collections.ExtendedProperties;
 import org.apache.commons.logging.LogFactory;
 import org.opencms.configuration.CmsParameterConfiguration;
 import org.opencms.db.CmsLoginMessage;
@@ -11,9 +10,7 @@ import org.opencms.main.OpenCmsCore;
 
 //import org.opencms.util.CmsPropertyUtils;
 
-
 import java.io.IOException;
-
 
 /**
  * Instantiates an embedded Opencms.
@@ -120,11 +117,11 @@ public final class CmOpenCmsShell {
 
     // code taken from org.opencms.main.CmsShell
     private void initialize() throws IOException, CmsException {
-        //Hack: Initialize CmsLog.INIT
-        if (CmsLog.INIT == null) {  
+        
+        // Using Maven-VFS-plugin CmsLog.INIT may not be initialized  
+        if (CmsLog.INIT == null) {
             CmsLog.INIT = LogFactory.getLog("org.opencms.init");
         }
-        System.out.println(CmsLog.INIT);
         
         // first initialize runlevel 1
         this.opencmsCore = OpenCmsCore.getInstance();

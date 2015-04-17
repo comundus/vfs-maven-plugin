@@ -332,7 +332,7 @@ public class XmlHandling {
     }
 
     protected void simpleReport(String msg) {
-        simpleReport(msg);
+        report(msg, I_CmsReport.FORMAT_DEFAULT);
     }
 
     /**
