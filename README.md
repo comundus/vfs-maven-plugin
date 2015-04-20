@@ -1,9 +1,9 @@
 To build `vfs-maven-plugin` following repository has to be defined in your Maven `settings.xml`
 
-    <repository>
-        <id>forwerts-github</id>
-        <url>https://comundus.github.io/maven2-repository</url>
-    </repository>
+	<repository>
+		<id>maven-vfs-plugin-github</id>
+		<url>https://comundus.github.io/maven2-repository</url>
+	</repository>
     
 This other one is possibly not needed anymore
     
