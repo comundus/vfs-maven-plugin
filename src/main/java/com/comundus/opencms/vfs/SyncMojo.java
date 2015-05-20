@@ -53,7 +53,7 @@ public class SyncMojo extends AbstractVfsMojo {
      *
      * @parameter
      */
-    private List syncVFSPaths;
+    private List<String> syncVFSPaths;
 
     /**
      * List of VFS resources to synchronize.<br/>
@@ -80,6 +80,16 @@ public class SyncMojo extends AbstractVfsMojo {
     private List <SyncResource>syncResources;
 
     /**
+     * @parameter
+     */
+    private List <String>ignoredNames;
+
+    /**
+     * @parameter
+     */
+    private List <String> notIgnoredNames;
+
+    /**
      * Performs VFS synchronisation.
      *
      * Only if VFS synchronization paths are configured; otherwise it's assumed
@@ -89,6 +99,7 @@ public class SyncMojo extends AbstractVfsMojo {
      *             in case anything goes wrong
      */
     public final void execute() throws MojoExecutionException {
+
     	if (this.isSkipVfs()) {
     		this.getLog().info("Skipping VFS plugin");
     		return;
@@ -118,12 +129,10 @@ public class SyncMojo extends AbstractVfsMojo {
         		printSyncResources();
         	}
         	VfsSync sync = new VfsSync();
-            sync.execute(
-                    getWebappDirectory(), this.syncSourceDirectory,
-                    this.syncMetadataDirectory, this.syncVFSPaths,
-                    this.syncResources,
-                    getAdminPassword()
-                );
+        	sync.setDebugEnabled(this.getLog().isDebugEnabled());
+                sync.execute(
+                    getWebappDirectory(), this.syncSourceDirectory, this.syncMetadataDirectory, this.syncVFSPaths,
+                    this.syncResources, this.ignoredNames, this.notIgnoredNames, getAdminPassword());
         } catch (NoClassDefFoundError e) {
             throw new MojoExecutionException("Failed to load " +
                 SyncMojo.SHELLCLASS, e);

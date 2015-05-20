@@ -7,8 +7,14 @@
         <author email="a.rodriguez@comundus.com">Adrian Rodriguez</author>
     </properties>
     <body>
+    	<release version="9.0.1b" date="2014-02-26" description="">
+    		<action dev="Alexey Chirkov" type="update">vfs-sync:Add OpenCms cache clear after VFS resource syncronization</action>
+    		<action dev="Alexey Chirkov" type="update">vfs-sync:Do not ignore hidden files</action>
+    		<action dev="ar" type="add">Ignorable file patterns configurable with &lt;ignoredFiles&gt; and &lt;notIgnoredFiles&gt;</action>
+    		<action dev="ar" type="add">Internal: It is possible to differentiate DEBUG and INFO messages from the Vfs* classes. Added DEBUG messages in VfsSync</action>
+    	</release>
     	<release version="9.0.1a" date="2014-02-26" description="">
-    		<action dev="ar" type="update">Checkstyle and PMD configuration are retrieved from the maven repository</action>
+    		<action dev="ar" type="update">Checkstyle and PMD configuration are retrieved from the Maven repository</action>
     	</release>
 	    <release version="9.0.1" date="2014-02-19" description="Version 9.0.1">
 	       	<action dev="ar" type="update">Updated to new OpenCms version which is 9.0.1</action>

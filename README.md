@@ -1,14 +1,15 @@
-To build `vfs-maven-plugin` following repositories have to be defined in your Maven `settings.xml`
+To build `vfs-maven-plugin` following repository has to be defined in your Maven `settings.xml`
 
+	<repository>
+		<id>maven-vfs-plugin-github</id>
+		<url>https://comundus.github.io/maven2-repository</url>
+	</repository>
+    
+This other one is possibly not needed anymore
+    
     <repository>
         <id>maven2-repository.dev.java.net</id>
         <name>Java.net Repository for Maven</name>
         <url>http://download.java.net/maven/2/</url>
         <layout>default</layout>
     </repository>
-
-    <repository>
-        <id>comundus-github</id>
-        <url>https://raw.github.com/comundus/maven2-repository/master</url>
-    </repository>
-    

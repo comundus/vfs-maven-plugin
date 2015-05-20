@@ -44,6 +44,11 @@ public class VfsOrgunits extends XmlHandling {
     // CmsPropertyDefinition.PROPERTY_DESCRIPTION;
     /** Property for the organizational unit default project id. */
     private static final String ORGUNIT_PROPERTY_PROJECTID = CmsPropertyDefinition.PROPERTY_KEYWORDS;
+    
+    // value copied from I_CmsPrincipal pre OpenCms-9.5
+    private static final int FLAG_GROUP_PROJECT_USER = 4;
+    // value copied from I_CmsPrincipal pre OpenCms-9.5
+    private static final int FLAG_GROUP_PROJECT_MANAGER = 2;
 
     /**
      * Creates organizational units from their already existant folders.
@@ -209,11 +214,11 @@ public class VfsOrgunits extends XmlHandling {
 
 				if ((role == CmsRole.WORKPLACE_USER) ||
 						(role == CmsRole.PROJECT_MANAGER)) {
-					flags |= I_CmsPrincipal.FLAG_GROUP_PROJECT_USER;
+					flags |= FLAG_GROUP_PROJECT_USER;
 				}
 
 				if (role == CmsRole.PROJECT_MANAGER) {
-					flags |= I_CmsPrincipal.FLAG_GROUP_PROJECT_MANAGER;
+					flags |= FLAG_GROUP_PROJECT_MANAGER;
 				}
 
 				// System.out.println("creating group " + groupName);
@@ -223,7 +228,7 @@ public class VfsOrgunits extends XmlHandling {
             }
         } catch (CmsException e) {
             throw new CmsInitException(Messages.get()
-                                               .container(Messages.ERR_INITIALIZING_USER_DRIVER_0),
+                                               .container(Messages.ERR_INITIALIZING_USER_DRIVER_0),                                               
                 e);
         }
 

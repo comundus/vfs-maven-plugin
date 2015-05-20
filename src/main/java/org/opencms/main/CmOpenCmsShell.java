@@ -1,12 +1,9 @@
 package org.opencms.main;
 
-import org.apache.commons.collections.ExtendedProperties;
-
+import org.apache.commons.logging.LogFactory;
 import org.opencms.configuration.CmsParameterConfiguration;
 import org.opencms.db.CmsLoginMessage;
-
 import org.opencms.file.CmsObject;
-
 import org.opencms.main.CmsException;
 import org.opencms.main.OpenCms;
 import org.opencms.main.OpenCmsCore;
@@ -14,7 +11,6 @@ import org.opencms.main.OpenCmsCore;
 //import org.opencms.util.CmsPropertyUtils;
 
 import java.io.IOException;
-
 
 /**
  * Instantiates an embedded Opencms.
@@ -121,6 +117,12 @@ public final class CmOpenCmsShell {
 
     // code taken from org.opencms.main.CmsShell
     private void initialize() throws IOException, CmsException {
+        
+        // Using Maven-VFS-plugin CmsLog.INIT may not be initialized  
+        if (CmsLog.INIT == null) {
+            CmsLog.INIT = LogFactory.getLog("org.opencms.init");
+        }
+        
         // first initialize runlevel 1
         this.opencmsCore = OpenCmsCore.getInstance();
         // set the path to the WEB-INF folder
