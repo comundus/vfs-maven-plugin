@@ -94,8 +94,6 @@ In order to compare it to the target version, the original version has to be bui
 This will generate a basic OpenCms 9.0.1 webapp in `opencms-basic/webapp/target/webapp`, and an OpenCms 
 database will be initialized in the schema `ocbasic_mvn`.
 
-. <https://tomcat.apache.org/maven-plugin-2.2/tomcat7-maven-plugin/>    ???????????????????????????
-
 ## Install the new OpenCms version
 
 The next step is to make a normal installation of OpenCms using the binary distribution from **opencms.org**. During the
