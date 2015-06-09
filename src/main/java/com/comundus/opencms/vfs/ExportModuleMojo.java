@@ -43,7 +43,6 @@ public class ExportModuleMojo extends AbstractVfsMojo {
     /**
      * Name of the module to export.
      * @parameter property="cmsModuleName"
-     * @required
      */
     private String moduleName;
 
