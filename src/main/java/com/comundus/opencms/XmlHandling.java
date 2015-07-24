@@ -341,11 +341,16 @@ public class XmlHandling {
      * @param format
      */
     protected void report(String msg, int format) {
-		this.getReport()
-			.println(org.opencms.report.Messages.get()
-					.container(org.opencms.report.Messages.RPT_ARGUMENT_1,
-							msg, format));
-	}
+        this.getReport().println(org.opencms.report.Messages.get()
+				.container(org.opencms.report.Messages.RPT_ARGUMENT_1, msg, format));
+    }
+    
+    protected void reportException (String msg, Throwable t) {
+        this.getReport().println(org.opencms.report.Messages.get()
+                .container(org.opencms.report.Messages.RPT_ARGUMENT_1, msg, I_CmsReport.FORMAT_ERROR));
+        this.getReport().addError(msg);
+        t.printStackTrace(System.out);
+    }
 
     /**
      * Merges the lists giving preference to the elements of <code>syncResources</code>
