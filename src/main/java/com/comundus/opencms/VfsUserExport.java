@@ -15,12 +15,14 @@ import org.opencms.file.CmsUser;
 import org.opencms.i18n.CmsMessageContainer;
 import org.opencms.importexport.CmsImportExportException;
 import org.opencms.importexport.CmsImportExportManager;
+import org.opencms.importexport.CmsImportVersion7;
 import org.opencms.importexport.Messages;
 import org.opencms.main.CmOpenCmsShell;
 import org.opencms.main.CmsException;
 import org.opencms.main.OpenCms;
 import org.opencms.report.CmsShellReport;
 import org.opencms.report.I_CmsReport;
+import org.opencms.security.CmsRole;
 import org.opencms.util.CmsDataTypeUtil;
 import org.xml.sax.SAXException;
 
@@ -228,91 +230,111 @@ public class VfsUserExport extends XmlHandling {
             throw new CmsImportExportException(message, e);
         }
     }
-
+    
     /**
-     * Exports one single user with all its data.
-     * <p>
-     *
-     * @param parent
-     *            the parent node to add the users to
-     * @param user
-     *            the user to be exported
-     * @throws CmsImportExportException
-     *             if something goes wrong
-     * @throws SAXException
-     *             if something goes wrong procesing the manifest.xml
+     * Exports one single user with all its data.<p>
+     * 
+     * @param parent the parent node to add the users to
+     * @param user the user to be exported
+     * 
+     * @throws CmsImportExportException if something goes wrong
+     * @throws SAXException if something goes wrong processing the manifest.xml
      */
+    // code taken from org.opencms.importexport.CmsExport - OpenCms Version 9.5.1
+    protected void exportUser(Element parent, CmsUser user) throws CmsImportExportException, SAXException {
 
-    // code taken from org.opencms.importexport.CmsExport
-    private void exportUser(final Element parent, final CmsUser user)
-        throws CmsImportExportException, SAXException {
         try {
             // add user node to the manifest.xml
-            final Element e = parent.addElement(CmsImportExportManager.N_USERDATA);
-            e.addElement(CmsImportExportManager.N_NAME).addText(user.getName());
-
+            Element e = parent.addElement(CmsImportVersion7.N_USER);
+            e.addElement(CmsImportVersion7.N_NAME).addText(user.getSimpleName());
             // encode the password, using a base 64 decoder
-            final String passwd = new String(Base64.encodeBase64(
-                        user.getPassword().getBytes()));
-            e.addElement(CmsImportExportManager.N_PASSWORD).addCDATA(passwd);
-            //            e.addElement(CmsImportExportManager.N_DESCRIPTION)
-            //             .addCDATA(user.getDescription());
-            e.addElement(CmsImportExportManager.N_FIRSTNAME)
-             .addText(user.getFirstname());
-            e.addElement(CmsImportExportManager.N_LASTNAME)
-             .addText(user.getLastname());
-            e.addElement(CmsImportExportManager.N_EMAIL).addText(user.getEmail());
-            e.addElement(CmsImportExportManager.N_FLAGS)
-             .addText(Integer.toString(user.getFlags()));
-            e.addElement(CmsImportExportManager.N_DATECREATED)
-             .addText(Long.toString(user.getDateCreated()));
+            String passwd = new String(Base64.encodeBase64(user.getPassword().getBytes()));
+            e.addElement(CmsImportVersion7.N_PASSWORD).addCDATA(passwd);
+            e.addElement(CmsImportVersion7.N_FIRSTNAME).addText(user.getFirstname());
+            e.addElement(CmsImportVersion7.N_LASTNAME).addText(user.getLastname());
+            e.addElement(CmsImportVersion7.N_EMAIL).addText(user.getEmail());
+            e.addElement(CmsImportVersion7.N_FLAGS).addText(Integer.toString(user.getFlags()));
+            e.addElement(CmsImportVersion7.N_DATECREATED).addText(Long.toString(user.getDateCreated()));
 
-            final Element userInfoNode = e.addElement(CmsImportExportManager.N_USERINFO);
-            final List keys = new ArrayList(user.getAdditionalInfo().keySet());
+            Element userInfoNode = e.addElement(CmsImportVersion7.N_USERINFO);
+            List<String> keys = new ArrayList<String>(user.getAdditionalInfo().keySet());
             Collections.sort(keys);
-
-            final Iterator itInfoKeys = keys.iterator();
-
+            Iterator<String> itInfoKeys = keys.iterator();
             while (itInfoKeys.hasNext()) {
-                final String key = (String) itInfoKeys.next();
-
+                String key = itInfoKeys.next();
                 if (key == null) {
                     continue;
                 }
-
-                final Object value = user.getAdditionalInfo(key);
-
+                Object value = user.getAdditionalInfo(key);
                 if (value == null) {
                     continue;
                 }
-
-                final Element entryNode = userInfoNode.addElement(CmsImportExportManager.N_USERINFO_ENTRY);
-                entryNode.addAttribute(CmsImportExportManager.A_NAME, key);
-                entryNode.addAttribute(CmsImportExportManager.A_TYPE,
-                    value.getClass().getName());
-
+                Element entryNode = userInfoNode.addElement(CmsImportVersion7.N_USERINFO_ENTRY);
+                entryNode.addAttribute(CmsImportVersion7.A_NAME, key);
+                entryNode.addAttribute(CmsImportVersion7.A_TYPE, value.getClass().getName());
                 try {
                     // serialize the user info and write it into a file
                     entryNode.addCDATA(CmsDataTypeUtil.dataExport(value));
-                } catch (final IOException ioe) {
+                } catch (IOException ioe) {
                     getReport().println(ioe);
+                    if (LOG.isErrorEnabled()) {
+                        LOG.error(
+                            Messages.get().getBundle().key(
+                                Messages.ERR_IMPORTEXPORT_ERROR_EXPORTING_USER_1,
+                                user.getName()),
+                            ioe);
+                    }
                 }
             }
 
-            // append the node for groups of user
-            final List userGroups = getCms().getGroupsOfUser(user.getName(), true);
-            final Element g = e.addElement(CmsImportExportManager.N_USERGROUPS);
-
-            for (int i = 0; i < userGroups.size(); i++) {
-                final String groupName = ((CmsGroup) userGroups.get(i)).getName();
-                g.addElement(CmsImportExportManager.N_GROUPNAME)
-                 .addElement(CmsImportExportManager.N_NAME).addText(groupName);
+            // append node for roles of user
+            Element userRoles = e.addElement(CmsImportVersion7.N_USERROLES);
+            List<CmsRole> roles = OpenCms.getRoleManager().getRolesOfUser(
+                getCms(),
+                user.getName(),
+                "",
+                true,
+                true,
+                true);
+            for (int i = 0; i < roles.size(); i++) {
+                String roleName = roles.get(i).getFqn();
+                userRoles.addElement(CmsImportVersion7.N_USERROLE).addText(roleName);
             }
-
+            // append the node for groups of user
+            Element userGroups = e.addElement(CmsImportVersion7.N_USERGROUPS);
+            List<CmsGroup> groups = getCms().getGroupsOfUser(user.getName(), true, true);
+            for (int i = 0; i < groups.size(); i++) {
+                String groupName = groups.get(i).getName();
+                userGroups.addElement(CmsImportVersion7.N_USERGROUP).addText(groupName);
+            }
             // write the XML
             digestElement(parent, e);
-        } catch (final CmsException e) {
+        } catch (CmsException e) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(e.getLocalizedMessage(), e);
+            }
             throw new CmsImportExportException(e.getMessageContainer(), e);
+        }
+    }
+    
+    private ConsoleLog LOG = new ConsoleLog();
+
+    private class ConsoleLog {
+        
+        public boolean isDebugEnabled() {
+            return true;
+        }
+
+        public boolean isErrorEnabled() {
+            return true;
+        }
+
+        public void debug(String message, Throwable t) {
+            VfsUserExport.this.reportException(message, t);
+        }
+        
+        public void error(String message, Throwable t) {
+            VfsUserExport.this.reportException(message, t);
         }
     }
 }
