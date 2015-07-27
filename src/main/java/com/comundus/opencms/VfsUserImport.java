@@ -17,6 +17,7 @@ import org.opencms.file.CmsUser;
 import org.opencms.i18n.CmsMessageContainer;
 import org.opencms.importexport.CmsImportExportException;
 import org.opencms.importexport.CmsImportExportManager;
+import org.opencms.importexport.CmsImportVersion7;
 import org.opencms.importexport.Messages;
 import org.opencms.main.CmOpenCmsShell;
 import org.opencms.main.CmsException;
@@ -332,12 +333,12 @@ public class VfsUserImport extends XmlHandling {
      *
      */
 
-    // code taken from org.opencms.importexport.CmsImportVersion6
+    // code taken from org.opencms.importexport.CmsImportVersion6 - Adapted to work with Version 7 (OpenCms 9.5.1)
     private void importUsers() throws IOException, ClassNotFoundException {
         // getAll user nodes
-        final List userNodes = getDocXml()
-                                   .selectNodes("//" +
-                CmsImportExportManager.N_USERDATA);
+        @SuppressWarnings("unchecked")
+        final List<Element> userNodes = getDocXml()
+                                   .selectNodes("//" + CmsImportVersion7.N_USER);
 
         // walk threw all groups in manifest
         for (int i = 0; i < userNodes.size(); i++) {
@@ -380,7 +381,7 @@ public class VfsUserImport extends XmlHandling {
 
             // get the groups of the user and put them into the list
             final List groupNodes = currentElement.selectNodes("*/" +
-                    CmsImportExportManager.N_GROUPNAME);
+                    CmsImportVersion7.N_USERGROUP);
             final List userGroups = new ArrayList();
 
             for (int j = 0; j < groupNodes.size(); j++) {
