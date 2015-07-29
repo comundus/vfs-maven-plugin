@@ -358,15 +358,32 @@ Refer to the last section for hints on troubleshooting any problems that might a
 ### What to test
 
 * Compare the contents of the webapp directory, where this subdirectories can be ignored:  
-  `export`
-  `setup`
-  `imagecache`
-  `config/backup`
-  `index`
-  `packages`
-  `setupdata`
-  `logs`
-  `jsp`
+  .`export`
+  .`setup`
+  .`imagecache`
+  .`config/backup`
+  .`index`
+  .`packages`
+  .`setupdata`
+  .`logs`
+  .`jsp`
+  
 * Use the synchronize functionality of OpenCms to write the VFS resources to the hard drive and compare the contents.  
 * Test all the goals of the plugin.
 
+## Make the new version available
+
+In order to make the VFS-Maven-Plugin available without having to install it in the local Maven repository, it has to
+be deployed to a public repository. The plugin has to be made available in the repository in 
+`https://comundus.github.io/maven2-repository`. This is done following the instructions in 
+<https://github.com/comundus/maven2-repository>. This is, in short:
+
+* Obtain the repository `maven2-repository` from <http://github.com/comundus> and checkout the branch `gh-pages`.
+
+* On `maven-vfs-plugin`, call `mvn clean deploy` indicating the path to this repository in the system property
+ `repo.path`. E.g.:
+
+    mvn clean deploy -Drepo.path={path to maven2-repository}
+
+* Commit and push the changes on `maven2-repository`
+	
