@@ -69,7 +69,7 @@ This excerpt of the POM shows where to find these values:
       
     ...
       
-    </project>
+    </project> 
 
 2) After modifying the POM, a build must be attempted. For this call `mvn install` in the folder `vfs-maven-plugin`.
 If the command is successful, the new version of the plugin is ready to be used by subsequent builds of opencms-basic in
@@ -77,6 +77,23 @@ our local computer. We can proceed to the next step, although we still don't kno
 
 In case the build of the VFS-Plugin fails, it will probably be because of a compile error caused by a change in the 
 OpenCms API. All the errors must be corrected in order for the build to work. 
+
+3) Adapt to modifications made in the new OpenCms version.
+
+The classes in `src/main/java/com.comundus.opencms` contain code originally based on OpenCms 7.0, and contain 
+comments detailing which OpenCms classes and methods they are based on. These are some classes that can be checked to 
+see if there are relevant changes: 
+
+    org.opencms.main.CmsShellCommands
+    org.opencms.synchronize.CmsSynchronize
+    org.opencms.importexport.CmsExport
+    org.opencms.module.CmsModuleImportExportHandler
+    org.opencms.importexport.CmsImportVersion6
+    
+The method `executeSetupTxt()` in `com.comundus.opencms.VfsSetup` has to mimic the commands called in
+the OpenCms-Shell script in:
+    
+    WEB-INF/setupdata/cmssetup.txt
 
 ## Build OpenCms-Basic
 
@@ -96,8 +113,9 @@ database will be initialized in the schema `ocbasic_mvn`.
 
 ## Install the new OpenCms version
 
-The next step is to make a normal installation of OpenCms using the binary distribution from **opencms.org**. During the
-step "Module selection", only the OpenCms Workplace should be left selected. See the image: 
+The next step is to make a normal installation of OpenCms using the binary distribution from **opencms.org**. If using
+the default configuration of Apache Tomcat and OpenCms, the setup process can be started on <http://localhost:8080/opencms/setup/>.
+During the step "Module selection", only the OpenCms Workplace should be left selected. See the image: 
 
 ![Module selection][module-selection] 
 
@@ -124,8 +142,27 @@ important to compare the files first, in order to know which modules were delete
 Please note, that `opencms-module.xml` does not contain an XML Prolog, while `opencms-modules.xml` does.
 
 Knowing which modules were added or deleted, we can proceed to update the file `pom.xml` in the subproject `system`.
-This is done in the configuration parameter `syncVFSPaths` of the `vfs-maven-plugin`. The following XML-code 
-helps to locate it:
+This is done adding the paths under `<resources>` of the module in the configuration parameter `syncVFSPaths` 
+of the `vfs-maven-plugin`. 
+
+Only paths under `/system/modules` have to be added. e.g.:
+
+    <module>
+        <name>org.opencms.ade.config</name>
+        <nicename><![CDATA[OpenCms 9 ADE Configuration]]></nicename>
+        <group>OpenCms ADE</group>
+        <class/>
+        ...
+        <dependencies />
+        <exportpoints />
+        <resources>
+            <resource uri="/system/modules/org.opencms.ade.config/"/>
+        </resources>
+        <parameters/>
+        ...
+    </module>
+
+The following XML-code helps to locate where to add the new paths in`/pom.xml` of the subproject `system`:
 
     <project>
       <build>
@@ -231,10 +268,10 @@ Optionally modify the values of the other properties related with the database c
     db.pool.default.password=root
 
 
-2) Ensure that the admin password of OpenCms is correctly configured in `webapp/pom.xml`, in case other than the 
+2) Ensure that the admin password of OpenCms is correctly configured in `parent/pom.xml`, in case other than the 
    default was configured in the installation of OpenCms 9.5.1.
 
-**-- Extract from webapp/pom.xml --**
+**-- Extract from parent/pom.xml --**
 
         <pluginManagement>
             <plugins>
@@ -285,7 +322,10 @@ Run this command from the project `system`:
 This will fill the subproject system with the resources of the target version.
     
 In case there are execution errors, all the resources in the directories `vfs` and `vfs-metadata` have to be
-deleted, correct the error, and run `mvn vfs:sync` again.
+deleted, correct the error, and run `mvn vfs:sync` again. It is of special importance to delete the file 
+`/src/main/vfs/system/#synclist.txt` for the synchronization to update the local files with the contents 
+from the OpenCms VFS, and not to modify the VFS.
+
 
 There are several possible kinds of errors, here are some hints to help solving them:
 
