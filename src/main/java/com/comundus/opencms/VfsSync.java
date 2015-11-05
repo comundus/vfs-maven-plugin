@@ -9,6 +9,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.dom4j.Attribute;
 import org.dom4j.Element;
@@ -113,7 +116,7 @@ public class VfsSync extends XmlHandling {
      * as we do not remove files from RFS we need to keep this List of
      * removables.
      */
-    private List removeRfsList;
+    private List<String> removeRfsList;
 
     /** Stores all relations defined in the import file to be created after all resources has been imported. */
     private Map m_importedRelations;
@@ -150,6 +153,9 @@ public class VfsSync extends XmlHandling {
      *            List of name patterns to add to the ignored list
      * @param notIgnoredNames
      *            List of name patterns to remove from the ignored list
+     * @param deleteRFSResources 
+     *            If {@code true}, the deletions in the VFS will cause the corresponding files to be deleted in the RFS,
+     *            else, only a warning message will be printed.
      * @param adminPassword
      *            password of user "Admin" performing the operation
      * @throws Exception
@@ -159,7 +165,7 @@ public class VfsSync extends XmlHandling {
 	    final String dPathInRfs, final String mPathInRfs,
 	    final List<String> syncVFSPaths, List<SyncResource> syncResources,
 	    final List<String> ignoredNames, List<String> notIgnoredNames,
-	    final String adminPassword)
+	    boolean deleteRFSResources, final String adminPassword)
 	    throws Exception {
 
 	this.destinationPathInRfs = dPathInRfs;
@@ -223,7 +229,7 @@ public class VfsSync extends XmlHandling {
 
 	computeIgnoredNames(ignoredNames, notIgnoredNames);
 
-	doTheSync(syncResources);
+	doTheSync(syncResources, deleteRFSResources);
 	rewriteParseables();
 	importRelations();
 
@@ -266,7 +272,7 @@ public class VfsSync extends XmlHandling {
      * @throws CmsException
      *             if anything goes wrong
      */
-    public final void doTheSync(final List<SyncResource> syncResources)
+    public final void doTheSync(final List<SyncResource> syncResources, boolean deleteRFSResources)
         throws CmsException {
 
         // create the sync list for this run
@@ -290,14 +296,15 @@ public class VfsSync extends XmlHandling {
             // m_newSyncList
             // so, entries remaining in m_synclist afterwards
             // do no longer exist in VFS
-            this.syncVfsToRfs(sourcePathInVfs, true);
+            this.syncVfsToRfs(sourcePathInVfs, true, deleteRFSResources);
         }
 
         // iterating thru RFS
         // deleting all RFS files from m_synclist
         // so, during a fresh import nothing ever gets deleted from RFS!
         report("---- Starting search for deleted resources", I_CmsReport.FORMAT_HEADLINE);
-        this.removeFromRfs(this.destinationPathInRfs, syncResources);
+        this.removeFromRfs(this.destinationPathInRfs, syncResources, deleteRFSResources);
+        report("---- Finished search for deleted resources", I_CmsReport.FORMAT_HEADLINE);
 
         // now checking for all files that might be new in RFS
         for (SyncResource vfsPath:syncResources) {
@@ -560,7 +567,7 @@ public class VfsSync extends XmlHandling {
      */
 
     // code taken from org.opencms.synchronize.CmsSynchronize
-    private void deleteFromVfs(final CmsResource res) throws CmsException {
+    private void deleteFromVfs(final CmsResource res, boolean deleteRFSResources) throws CmsException {
         final String resourcename = this.getCms().getSitePath(res);
         this.getReport()
             .print(org.opencms.report.Messages.get()
@@ -609,12 +616,52 @@ public class VfsSync extends XmlHandling {
 
         if (metadataFile.exists()) {
             // we have metadata remaining for a deleted content file or folder
-            this.getReport()
-                .println(org.opencms.report.Messages.get()
-                                                    .container(org.opencms.report.Messages.RPT_ARGUMENT_1,
-                    "WARNING: please remove " + metadataFile.getAbsolutePath()),
-                I_CmsReport.FORMAT_WARNING);
+
+            if (deleteRFSResources) {
+                deleteFile(metadataFile.getAbsoluteFile());
+            } else {
+                this.getReport()
+                    .println(org.opencms.report.Messages.get()
+                                                        .container(org.opencms.report.Messages.RPT_ARGUMENT_1,
+                        "WARNING: please remove " + metadataFile.getAbsolutePath()),
+                    I_CmsReport.FORMAT_WARNING);
+            }
         }
+    }
+
+    private void deleteFile(File file) {
+
+        this.getReport().print(org.opencms.report.Messages.get()
+                                          .container(org.opencms.report.Messages.RPT_SUCCESSION_1,
+            String.valueOf(this.count++)), I_CmsReport.FORMAT_NOTE);
+
+        if (file.isFile()) {
+            this.getReport().print(org.opencms.synchronize.Messages.get()
+                                                       .container(org.opencms.synchronize.Messages.RPT_DEL_FILE_0),
+                I_CmsReport.FORMAT_NOTE);
+        } else {
+            this.getReport().print(org.opencms.synchronize.Messages.get()
+                                                       .container(org.opencms.synchronize.Messages.RPT_DEL_FOLDER_0),
+                I_CmsReport.FORMAT_NOTE);
+        }
+    
+        this.getReport().print(org.opencms.report.Messages.get()
+                                              .container(org.opencms.report.Messages.RPT_ARGUMENT_1,
+                file.getAbsolutePath()+" "));
+        
+        try {
+            FileUtils.forceDelete(file);
+            this.getReport().println(org.opencms.report.Messages.get()
+                                                .container(org.opencms.report.Messages.RPT_OK_0),
+            I_CmsReport.FORMAT_OK);
+            
+        } catch (IOException e) {
+            this.getReport().println(org.opencms.report.Messages.get()
+                    .container(org.opencms.report.Messages.RPT_ARGUMENT_1,
+                    "WARNING. DELETION FAILED: please remove " + file.getAbsolutePath()),
+                    I_CmsReport.FORMAT_WARNING);
+        }
+                        
     }
 
     /**
@@ -994,7 +1041,7 @@ public class VfsSync extends XmlHandling {
      */
 
     // code taken from org.opencms.synchronize.CmsSynchronize
-    private void removeFromRfs(final String folder, List<SyncResource> syncResources) throws CmsException {
+    private void removeFromRfs(final String folder, List<SyncResource> syncResources, boolean deleteRFSResources) throws CmsException {
 
         // get the corresponding folder in the FS
         File[] res;
@@ -1029,11 +1076,11 @@ public class VfsSync extends XmlHandling {
 
             if ((res[i].isDirectory()) && (!res[i].isHidden()) &&
                     (!isIgnorableFile(new File(abspath)))) {
-            	this.removeFromRfs(abspath, syncResources);
+            	this.removeFromRfs(abspath, syncResources, deleteRFSResources);
 
             // Also recurse if the file is in the syncResources
             } else if (res[i].isFile() && removingFolder && syncResourcesContainsResource(syncResources, res[i])) {
-            	this.removeFromRfs(abspath, syncResources);
+            	this.removeFromRfs(abspath, syncResources, deleteRFSResources);
             }
 
             // now check if this resource is still in the old sync list.
@@ -1053,23 +1100,36 @@ public class VfsSync extends XmlHandling {
 
                 // do not reimport deletables
                 if (!isIgnorableFile(res[i])) {
-                    this.getReport()
-                        .println(org.opencms.report.Messages.get()
-                            .container(org.opencms.report.Messages.RPT_ARGUMENT_1,
-                            "WARNING: please remove " + abspath),
-                            I_CmsReport.FORMAT_WARNING);
-
-                    final File metadataFile = this.getMetadataFileInRfs(vfsFile);
-
-                    // I think we really only have files here, no
-                    // subdirectories
-                    if (metadataFile.exists()) {
+                    File f =new File(abspath);
+                    boolean isFile = f.isFile();
+                    if (deleteRFSResources) {
+                        deleteFile(f);
+                    } else {
                         this.getReport()
                             .println(org.opencms.report.Messages.get()
-                                                                .container(org.opencms.report.Messages.RPT_ARGUMENT_1,
-                                "WARNING: please remove " +
-                                metadataFile.getAbsolutePath()),
-                            I_CmsReport.FORMAT_WARNING);
+                                .container(org.opencms.report.Messages.RPT_ARGUMENT_1,
+                                "WARNING: please remove " + abspath),
+                                I_CmsReport.FORMAT_WARNING);
+                    
+                    }
+
+                    final File metadataFile = isFile
+                            ? this.getMetadataFileInRfs(vfsFile)
+                            : this.getMetadataFolderInRfs(vfsFile);
+                    if (deleteRFSResources) {
+                        deleteFile(metadataFile.getAbsoluteFile());
+                    } else {
+
+                        // I think we really only have files here, no
+                        // subdirectories
+                        if (metadataFile.exists()) {
+                            this.getReport()
+                                .println(org.opencms.report.Messages.get()
+                                                                    .container(org.opencms.report.Messages.RPT_ARGUMENT_1,
+                                    "WARNING: please remove " +
+                                    metadataFile.getAbsolutePath()),
+                                I_CmsReport.FORMAT_WARNING);
+                        }
                     }
                 }
             }
@@ -1196,7 +1256,7 @@ public class VfsSync extends XmlHandling {
      */
 
     // code taken from org.opencms.synchronize.CmsSynchronize
-    private void syncVfsToRfs(final SyncResource sourcePathInVfs, final boolean startfolder)
+    private void syncVfsToRfs(final SyncResource sourcePathInVfs, final boolean startfolder, boolean deleteRFSResources)
         throws CmsException {
         int action = 0;
 
@@ -1302,10 +1362,11 @@ public class VfsSync extends XmlHandling {
 
         		// recurse into the subfolders. This must be done before
         		// the folder might be deleted!
-        		this.syncVfsToRfs(new SyncResource(childResourcePath, sourcePathInVfs.getExcludes()), false);
+        		this.syncVfsToRfs(new SyncResource(childResourcePath, sourcePathInVfs.getExcludes()), false, 
+        		        deleteRFSResources);
 
         		if (action == DELETE_FROM_VFS) {
-        		    this.deleteFromVfs(res);
+        		    this.deleteFromVfs(res, deleteRFSResources);
         		}
         	    } else {
         		// if the current resource is a file, check if it has to
@@ -1325,7 +1386,7 @@ public class VfsSync extends XmlHandling {
         		    break;
 
         		case DELETE_FROM_VFS:
-        		    this.deleteFromVfs(res);
+        		    this.deleteFromVfs(res, deleteRFSResources);
 
         		    break;
 

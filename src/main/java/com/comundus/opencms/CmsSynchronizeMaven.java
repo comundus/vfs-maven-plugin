@@ -95,7 +95,8 @@ public class CmsSynchronizeMaven implements I_CmsSynchronize {
             for(String resourcePath:settings.getSourceListInVfs()){
             	syncResources.add(new SyncResource(resourcePath));
             }
-			mysync.doTheSync(syncResources);
+
+            mysync.doTheSync(syncResources, Boolean.valueOf(System.getProperty("opencms.deleteRFSResources", "false")));
         }
     }
 }
