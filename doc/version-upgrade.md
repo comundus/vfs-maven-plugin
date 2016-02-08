@@ -10,8 +10,8 @@ projects.
 
 It is assumed that the reader knows how to use VFS-Plugin. Refer to the plugin documentation for an explanation of its use:
 
-. <http://opencms-maven.comundus.com/documentation/setting-up-opencms/>  
-. <http://opencms-maven.comundus.com/documentation/using-opencms-maven/>
+. <https://opencms-maven.comundus.com/documentation/setting-up-opencms/>  
+. <https://opencms-maven.comundus.com/documentation/using-opencms-maven/>
 
 ## Check out projects
 
@@ -20,7 +20,7 @@ As a first step, following repositories must be obtained from <http://github.com
  * `vfs-maven-plugin`
  * `opencms-basic`
 
-`vfs-maven-plugin` contains an only project for the Maven Plugin.
+`vfs-maven-plugin` contains only the one project for the Maven Plugin.
 
 `opencms-basic` contains a multi-module Maven project where the root and parent project resides in the `parent`
 folder.
