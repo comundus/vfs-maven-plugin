@@ -196,7 +196,8 @@ of the `webapp` subproject. This is:
   * `opencms-basic/webapp/src/main/webapp`
   
 The changes in the directory WEB-INF/lib have to be handled using the dependencies in the file `pom.xml` of the 
-`webapp` project.
+`webapp` project. Usually the OpenCms dependencies are handled in the pom.xml of opencms-core (see: `http://mvnrepository.com/artifact/org.opencms/opencms-core`). In section **"Test the new version"** compare the libs folders and check, if there are differences. If so, you can add additional dependencies or dependency exclusions in `pom.xml` of the 
+`webapp` project. 
 
 For example, in the update to OpenCms 8.5, these new files and directories were found:
 
