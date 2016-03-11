@@ -145,7 +145,7 @@ Knowing which modules were added or deleted, we can proceed to update the file `
 This is done adding the paths under `<resources>` of the module in the configuration parameter `syncVFSPaths` 
 of the `vfs-maven-plugin`. 
 
-Only paths under `/system/modules` have to be added. e.g.:
+Usually, only paths under `/system/modules` have to be added. e.g.:
 
     <module>
         <name>org.opencms.ade.config</name>
@@ -162,6 +162,7 @@ Only paths under `/system/modules` have to be added. e.g.:
         ...
     </module>
 
+In rare cases folders directly under system have to be added (in version 10 the folder `/system/userimages` was added)
 The following XML-code helps to locate where to add the new paths in`/pom.xml` of the subproject `system`:
 
     <project>
@@ -198,6 +199,7 @@ of the `webapp` subproject. This is:
 The changes in the directory WEB-INF/lib have to be handled using the dependencies in the file `pom.xml` of the 
 `webapp` project. Usually the OpenCms dependencies are handled in the pom.xml of opencms-core (see: `http://mvnrepository.com/artifact/org.opencms/opencms-core`). In section **"Test the new version"** compare the libs folders and check, if there are differences. If so, you can add additional dependencies or dependency exclusions in `pom.xml` of the 
 `webapp` project. 
+Since version 10, the module jars are no longer in the modules lib folder. So you have to handle these jars as dependencies in `pom.xml` of the `webapp` project as well. 
 
 For example, in the update to OpenCms 8.5, these new files and directories were found:
 
@@ -206,7 +208,6 @@ For example, in the update to OpenCms 8.5, these new files and directories were 
 * `WEB-INF/config/sun-jaxws.xml`
 * `WEB-INF/classes/META-INF/persistence.xml`
 * `WEB-INF/classes/ehcache.xml`
-
 
 ## Update versions in opencms-basic
 
@@ -242,7 +243,7 @@ the target version.
 
 1) Change the database connection in **[project webapp]**`/target/webapp/WEB-INF/config/opencms.properties`
 
-Modify the JDBC URL in the propety `db.pool.default.jdbcUrl` to point to the database `opencms` or the one used
+Modify the JDBC URL in the property `db.pool.default.jdbcUrl` to point to the database `opencms` or the one used
 to install OpenCms 9.5.1 in the section **"Install the new OpenCms version"**.
 
 Optionally modify the values of the other properties related with the database connection in `opencms.properties`
@@ -370,7 +371,7 @@ Refer to the last section for hints on troubleshooting any problems that might a
   .`jsp`
   
 * Use the synchronize functionality of OpenCms to write the VFS resources to the hard drive and compare the contents.  
-* Test all the goals of the plugin.
+* Test all the goals of the plugin. (Since version 10 the synchronization feature of OpenCms does no longer exist. You can use the database export feature instead and compare the generated zip files.) 
 
 ## Make the new version available
 
