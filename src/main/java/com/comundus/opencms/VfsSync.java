@@ -13,6 +13,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -37,6 +38,7 @@ import org.opencms.i18n.CmsEncoder;
 import org.opencms.i18n.CmsMessageContainer;
 import org.opencms.importexport.CmsImportExportException;
 import org.opencms.importexport.CmsImportExportManager;
+import org.opencms.importexport.CmsImportVersion7;
 import org.opencms.loader.CmsLoaderException;
 import org.opencms.main.CmOpenCmsShell;
 import org.opencms.main.CmsEvent;
@@ -1150,8 +1152,19 @@ public class VfsSync extends XmlHandling {
     private void skipResource(final CmsResource res) {
 	// add the file to the new sync list...
 	final String resname = this.getCms().getSitePath(res);
-	final CmsSynchronizeList sList = (CmsSynchronizeList) this.syncList.get(this.translate(
-		resname));
+    final CmsSynchronizeList sync = (CmsSynchronizeList) this.syncList.get(this.translate(
+    		resname));
+    final File fsFile = this.getFileInRfs(sync.getResName());
+    final File metadataFile;
+    if (res.isFolder()) {
+    	metadataFile = this.getMetadataFolderInRfs(sync.getResName());
+    } else {
+    	metadataFile = this.getMetadataFileInRfs(sync.getResName());
+    }
+    final long rfslastmod = Math.max(fsFile.lastModified(),
+	    metadataFile.lastModified());
+	final CmsSynchronizeList sList = new CmsSynchronizeList(sync.getResName(),
+            this.translate(resname), sync.getModifiedVfs(), rfslastmod);
 	this.newSyncList.put(this.translate(resname), sList);
 	// .. and remove it from the old one
 	this.syncList.remove(this.translate(resname));
@@ -1168,6 +1181,7 @@ public class VfsSync extends XmlHandling {
 	.println(org.opencms.report.Messages.get()
 		.container(org.opencms.report.Messages.RPT_ARGUMENT_1,
 			resname));
+	
     }
 
     /**
@@ -1372,6 +1386,13 @@ public class VfsSync extends XmlHandling {
 		metadataFile = this.getMetadataFileInRfs(sync.getResName());
 	    }
 
+		try {
+			this.setDocXml(CmsXmlUtils.unmarshalHelper(
+					CmsFileUtil.readFile(metadataFile), null));
+		} catch (Exception e) {
+			//do nothing
+		}
+	    
 	    final long vfslastmod = res.getDateLastModified();
 
 	    // in a subversion team environment it may happen that *only* the metadata file is newer
@@ -1391,8 +1412,10 @@ public class VfsSync extends XmlHandling {
 		if ((rfslastmod > sync.getModifiedFs()) &&
 			(rfslastmod > vfslastmod)) {
 		    // RFS neuer als Sync und VFS
-		    action = UPDATE_IN_VFS; // RFS => VFS
-		} else {
+			if (isFileWasChanged(fsFile, res)) {
+				action = UPDATE_IN_VFS; // RFS => VFS
+			}
+		} else if (isFileWasChanged(fsFile, res)) {
 		    action = EXPORT_FROM_VFS; // VFS => RFS
 		}
 	    } else { // nicht neu im VFS
@@ -1401,7 +1424,7 @@ public class VfsSync extends XmlHandling {
 
 		if (fsFile.exists()) {
 		    // now check if the resource in the FS might have changed
-		    if (rfslastmod > sync.getModifiedFs()) {
+		    if (rfslastmod > sync.getModifiedFs() && isFileWasChanged(fsFile, res)) {
 			action = UPDATE_IN_VFS;
 		    } // else action remains 0
 		} else {
@@ -1417,6 +1440,381 @@ public class VfsSync extends XmlHandling {
 	return action;
     }
 
+	/**
+	 * Check if the file in VFS or RFS was changed
+	 * 
+	 * Required to prevent unnecessary metadata updates
+	 * 
+	 * @param fsFile
+	 *            - file in File System
+	 * @param resource
+	 *            - CmsResource in VFS
+	 * 
+	 * @return true if file was changed
+	 * 
+	 */
+	private boolean isFileWasChanged(final File fsFile,
+			final CmsResource resource) {
+		final Map<String, Object> fsFileParams = new HashMap<String, Object>();
+		final Map<String, Object> vfsFileParams = new HashMap<String, Object>();
+		try {
+			fillFileParamMap(fsFileParams, null, false);
+			fillFileParamMap(vfsFileParams, resource, true);
+			if (isFileContentsDiffer(fsFile, resource)) {
+				return true;
+			}
+			if (isParamsDiffer(fsFileParams, vfsFileParams)) {
+				return true;
+			}
+		} catch (final Exception e) {
+			this.getReport().println(e);
+			return true;
+		}
+		return false;
+	}
+
+	private boolean isFileContentsDiffer(final File fsFile,
+			final CmsResource resource) throws IOException, CmsException {
+		if (null == resource || null == fsFile) {
+			return true;
+		}
+		if (OpenCms.getResourceManager().getResourceType(resource).isFolder()) {
+			return false;
+		}
+		return !Arrays.equals(this.getCms().readFile(resource).getContents(),
+				CmsFileUtil.readFile(fsFile));
+	}
+
+	private boolean isParamsDiffer(final Map<String, Object> fsFileParams,
+			final Map<String, Object> vfsFileParams) {
+		for (String key : fsFileParams.keySet()) {
+			if (vfsFileParams.get(key) instanceof String
+					&& vfsFileParams.get(key) != null
+					&& !((String) vfsFileParams.get(key))
+							.equals((String) fsFileParams.get(key))) {
+				return true;
+			}
+			if (vfsFileParams.get(key) instanceof Long
+					&& !((Long) vfsFileParams.get(key))
+							.equals((Long) fsFileParams.get(key))) {
+				return true;
+			}
+			if (CmsImportVersion7.N_PROPERTIES.equals(key)
+					&& !isListEquals((List<CmsProperty>) fsFileParams.get(key),
+							(List<CmsProperty>) vfsFileParams.get(key),
+							propertyComparator)) {
+				return true;
+			}
+			if (CmsImportVersion7.N_ACCESSCONTROL_ENTRIES.equals(key)
+					&& !isListEquals((List<CmsAccessControlEntry>) fsFileParams
+							.get(key),
+							(List<CmsAccessControlEntry>) vfsFileParams
+									.get(key),
+							CmsAccessControlEntry.COMPARATOR_ACE)) {
+				return true;
+			}
+			if (CmsImportVersion7.N_RELATIONS.equals(key)
+					&& !isListEquals((List<CmsRelation>) fsFileParams.get(key),
+							(List<CmsRelation>) vfsFileParams.get(key),
+							CmsRelation.COMPARATOR)) {
+				return true;
+			}
+			if (CmsImportVersion7.N_TYPE.equals(key)
+					&& !((I_CmsResourceType) vfsFileParams.get(key))
+							.isIdentical((I_CmsResourceType) fsFileParams
+									.get(key))) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private <T> boolean isListEquals(final List<T> vfsList,
+			final List<T> fsList, final Comparator<? super T> comparator) {
+		if (isListsEmpty(vfsList, fsList)) {
+			return true;
+		}
+		if (isListSizeDifferent(vfsList, fsList)) {
+			return false;
+		}
+		Collections.sort(vfsList, comparator);
+		Collections.sort(fsList, comparator);
+		for (int i = 0; i < vfsList.size(); i++) {
+			if (vfsList.get(i).getClass() == CmsProperty.class
+					&& !((CmsProperty) vfsList.get(i))
+							.isIdentical((CmsProperty) fsList.get(i))) {
+				return false;
+			}
+			if (vfsList.get(i).getClass() == CmsAccessControlEntry.class
+					&& !isACEEquals((CmsAccessControlEntry) vfsList.get(i),
+							(CmsAccessControlEntry) fsList.get(i))) {
+				return false;
+			}
+			if (vfsList.get(i).getClass() == CmsRelation.class
+					&& !((CmsRelation) vfsList.get(i))
+							.equals((CmsRelation) vfsList.get(i))) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * compare two ACE without checking resourceId.
+	 * 
+	 * @param aceOne
+	 * @param aceTwo
+	 * @return true if ACE equals
+	 */
+	private boolean isACEEquals(CmsAccessControlEntry aceOne,
+			CmsAccessControlEntry aceTwo) {
+		if (aceOne.getFlags() != aceTwo.getFlags()) {
+			return false;
+		}
+		if (aceOne.getPermissions().getAllowedPermissions() != aceTwo
+				.getPermissions().getAllowedPermissions()) {
+			return false;
+		}
+		if (aceOne.getPermissions().getDeniedPermissions() != aceTwo
+				.getPermissions().getDeniedPermissions()) {
+			return false;
+		}
+		if (!aceOne.getPrincipal().equals(aceTwo.getPrincipal())) {
+			return false;
+		}
+		return true;
+	}
+
+	private static final Comparator<CmsProperty> propertyComparator = new Comparator<CmsProperty>() {
+		@Override
+		public int compare(CmsProperty o1, CmsProperty o2) {
+			return o1.compareTo(o2);
+		}
+	};
+
+	private boolean isListsEmpty(List<? extends Object> listOne,
+			List<? extends Object> listTwo) {
+		if ((listOne == null && listTwo == null)
+				|| (listOne.isEmpty() && listTwo.isEmpty())) {
+			return true;
+		}
+
+		return false;
+	}
+
+	private boolean isListSizeDifferent(List<? extends Object> listOne,
+			List<? extends Object> listTwo) {
+		if ((listOne == null && listTwo != null) || listOne != null
+				&& listTwo == null || listOne.size() != listTwo.size()) {
+			return true;
+		}
+		return false;
+	}
+
+	private void fillFileParamMap(final Map<String, Object> fileParamMap,
+			final CmsResource resource, final boolean readParamFromVfsFile)
+			throws Exception {
+		List ignoredProperties = OpenCms.getImportExportManager()
+				.getIgnoredProperties();
+		if (ignoredProperties == null) {
+			ignoredProperties = Collections.EMPTY_LIST;
+		}
+		final Element currentElement = (Element) this.getDocXml()
+				.selectNodes("//" + CmsImportVersion7.N_FILE).get(0);
+
+		// <type>
+		final I_CmsResourceType type = readParamFromVfsFile ? OpenCms
+				.getResourceManager().getResourceType(resource) : OpenCms
+				.getResourceManager().getResourceType(
+						XmlHandling.getChildElementTextValue(currentElement,
+								CmsImportVersion7.N_TYPE));
+		fileParamMap.put(CmsImportVersion7.N_TYPE, type);
+
+		// <destination>
+		final String destination = XmlHandling.getChildElementTextValue(
+				currentElement, CmsImportVersion7.N_DESTINATION);
+		fileParamMap.put(CmsImportVersion7.N_DESTINATION,
+				readParamFromVfsFile ? this.getCms().getSitePath(resource)
+						: "/" + destination + (type.isFolder() ? "/" : ""));
+
+		// <uuidstructure>
+		final String uuidstructure = readParamFromVfsFile ? resource
+				.getStructureId().toString() : XmlHandling
+				.getChildElementTextValue(currentElement,
+						CmsImportVersion7.N_UUIDSTRUCTURE);
+		fileParamMap.put(CmsImportVersion7.N_UUIDSTRUCTURE, uuidstructure);
+
+		// <uuidresource>
+		if (!type.isFolder()) {
+			fileParamMap.put(
+					CmsImportVersion7.N_UUIDRESOURCE,
+					readParamFromVfsFile ? resource.getResourceId().toString()
+							: XmlHandling.getChildElementTextValue(
+									currentElement,
+									CmsImportVersion7.N_UUIDRESOURCE));
+		} else {
+			fileParamMap.put(CmsImportVersion7.N_UUIDRESOURCE, null);
+		}
+
+		// <userlastmodified>
+		fileParamMap.put(
+				CmsImportVersion7.N_USERLASTMODIFIED,
+				readParamFromVfsFile ? this.getCms()
+						.readUser(resource.getUserLastModified()).getName()
+						: getUserFieldFromMetadata(currentElement,
+								CmsImportVersion7.N_USERLASTMODIFIED));
+
+		// <usercreated>
+		fileParamMap.put(
+				CmsImportVersion7.N_USERCREATED,
+				readParamFromVfsFile ? this.getCms()
+						.readUser(resource.getUserLastModified()).getName()
+						: getUserFieldFromMetadata(currentElement,
+								CmsImportVersion7.N_USERCREATED));
+
+		// <datecreated>
+		fileParamMap.put(
+				CmsImportVersion7.N_DATECREATED,
+				readParamFromVfsFile ? resource.getDateCreated() / 1000
+						: getDateFieldFromMetadata(currentElement,
+								CmsImportVersion7.N_DATECREATED,
+								System.currentTimeMillis()) / 1000);
+
+		// <datereleased>
+		fileParamMap.put(
+				CmsImportVersion7.N_DATERELEASED,
+				readParamFromVfsFile ? resource.getDateReleased() / 1000
+						: getDateFieldFromMetadata(currentElement,
+								CmsImportVersion7.N_DATERELEASED,
+								CmsResource.DATE_RELEASED_DEFAULT) / 1000);
+
+		// <dateexpired>
+		fileParamMap.put(
+				CmsImportVersion7.N_DATEEXPIRED,
+				readParamFromVfsFile ? resource.getDateExpired() / 1000
+						: getDateFieldFromMetadata(currentElement,
+								CmsImportVersion7.N_DATEEXPIRED,
+								CmsResource.DATE_EXPIRED_DEFAULT) / 1000);
+
+		// <flags>
+		fileParamMap.put(
+				CmsImportVersion7.N_FLAGS,
+				readParamFromVfsFile ? String.valueOf(resource.getFlags())
+						: XmlHandling.getChildElementTextValue(currentElement,
+								CmsImportVersion7.N_FLAGS));
+
+		// <properties>
+		fileParamMap.put(
+				CmsImportVersion7.N_PROPERTIES,
+				readParamFromVfsFile ? this.getCms().readPropertyObjects(
+						resource, false) : this.readPropertiesFromManifest(
+						currentElement, ignoredProperties));
+
+		// <accesscontrol>
+		fileParamMap
+				.put(CmsImportVersion7.N_ACCESSCONTROL_ENTRIES,
+						readParamFromVfsFile ? this.getCms()
+								.getAccessControlEntries(
+										this.getCms().getSitePath(resource),
+										false)
+								: getACEList(
+										uuidstructure,
+										currentElement
+												.selectNodes("*/"
+														+ CmsImportVersion7.N_ACCESSCONTROL_ENTRY)));
+		// <relations>
+		fileParamMap.put(
+				CmsImportVersion7.N_RELATIONS,
+				readParamFromVfsFile ? this.getCms().getRelationsForResource(
+						this.getCms().getSitePath(resource),
+						CmsRelationFilter.TARGETS.filterNotDefinedInContent())
+						: getRelationsForElement(new CmsUUID(uuidstructure),
+								destination, currentElement));
+	}
+
+	private long getDateFieldFromMetadata(final Element currentElement,
+			final String fieldname, final long defaultValue) {
+		String timestamp = XmlHandling.getChildElementTextValue(currentElement,
+				fieldname);
+		if (timestamp != null) {
+			return this.convertTimestamp(timestamp);
+		} else {
+			return defaultValue;
+		}
+	}
+
+	private String getUserFieldFromMetadata(final Element currentElement,
+			final String fieldname) {
+		return OpenCms.getImportExportManager().translateUser(
+				XmlHandling.getChildElementTextValue(currentElement,
+						CmsImportVersion7.N_USERLASTMODIFIED));
+	}
+
+	private List<CmsAccessControlEntry> getACEList(final String uuidresource,
+			final List acentryNodes) {
+		final List<CmsAccessControlEntry> aceList = new ArrayList<CmsAccessControlEntry>();
+		Element currentEntry;
+		for (int j = 0; j < acentryNodes.size(); j++) {
+			currentEntry = (Element) acentryNodes.get(j);
+
+			// get the data of the access control entry
+			final String id = XmlHandling.getChildElementTextValue(
+					currentEntry, CmsImportVersion7.N_ACCESSCONTROL_PRINCIPAL);
+			String principalId = new CmsUUID().toString();
+			String principal = id.substring(id.indexOf('.') + 1, id.length());
+
+			try {
+				if (id.startsWith(I_CmsPrincipal.PRINCIPAL_GROUP)) {
+					principal = OpenCms.getImportExportManager()
+							.translateGroup(principal);
+					principalId = this.getCms().readGroup(principal).getId()
+							.toString();
+				} else if (id.startsWith(I_CmsPrincipal.PRINCIPAL_USER)) {
+					principal = OpenCms.getImportExportManager().translateUser(
+							principal);
+					principalId = this.getCms().readUser(principal).getId()
+							.toString();
+				} else if (id.startsWith(CmsRole.PRINCIPAL_ROLE)) {
+					principalId = CmsRole.valueOfRoleName(principal).getId()
+							.toString();
+				} else if (id
+						.equalsIgnoreCase(CmsAccessControlEntry.PRINCIPAL_ALL_OTHERS_NAME)) {
+					principalId = CmsAccessControlEntry.PRINCIPAL_ALL_OTHERS_ID
+							.toString();
+				} else if (id
+						.equalsIgnoreCase(CmsAccessControlEntry.PRINCIPAL_OVERWRITE_ALL_NAME)) {
+					principalId = CmsAccessControlEntry.PRINCIPAL_OVERWRITE_ALL_ID
+							.toString();
+				}
+
+				final String acflags = XmlHandling.getChildElementTextValue(
+						currentEntry, CmsImportVersion7.N_FLAGS);
+				final String allowed = ((Element) currentEntry
+						.selectNodes(
+								"./"
+										+ CmsImportVersion7.N_ACCESSCONTROL_PERMISSIONSET
+										+ "/"
+										+ CmsImportVersion7.N_ACCESSCONTROL_ALLOWEDPERMISSIONS)
+						.get(0)).getTextTrim();
+				final String denied = ((Element) currentEntry
+						.selectNodes(
+								"./"
+										+ CmsImportVersion7.N_ACCESSCONTROL_PERMISSIONSET
+										+ "/"
+										+ CmsImportVersion7.N_ACCESSCONTROL_DENIEDPERMISSIONS)
+						.get(0)).getTextTrim();
+				aceList.add(new CmsAccessControlEntry(
+						new CmsUUID(uuidresource), new CmsUUID(principalId),
+						Integer.parseInt(allowed), Integer.parseInt(denied),
+						Integer.parseInt(acflags)));
+			} catch (final CmsException e) {
+				this.getReport().println(e);
+			}
+		}
+		return aceList;
+	}
+    
+    
     /**
      * Translates the resource name.
      * <p>
@@ -2338,39 +2736,49 @@ public class VfsSync extends XmlHandling {
      */
 
     // code taken from CmsImportVersion5
-    protected void importRelations(final CmsResource resource,
-        final Element parentElement) {
-        // Get the nodes for the relations
-        final List relationElements = parentElement.selectNodes("./" +
-                CmsImportExportManager.N_RELATIONS + "/" +
-                CmsImportExportManager.N_RELATION);
+	protected void importRelations(final CmsResource resource,
+			final Element parentElement) {
+		final List<CmsRelation> relations = getRelationsForElement(
+				resource.getResourceId(), resource.getRootPath(), parentElement);
+		if (!relations.isEmpty()) {
+			this.m_importedRelations.put(resource.getRootPath(), relations);
+		}
+	}
+    
+	private List<CmsRelation> getRelationsForElement(
+			final CmsUUID resourceUUID, final String resourcePath,
+			final Element parentElement) {
+		// Get the nodes for the relations
+		final List relationElements = parentElement.selectNodes("./"
+				+ CmsImportExportManager.N_RELATIONS + "/"
+				+ CmsImportExportManager.N_RELATION);
 
-        final List relations = new ArrayList();
+		final List<CmsRelation> relations = new ArrayList<CmsRelation>();
 
-        // iterate over the nodes
-        final Iterator itRelations = relationElements.iterator();
+		// iterate over the nodes
+		final Iterator itRelations = relationElements.iterator();
 
-        while (itRelations.hasNext()) {
-            final Element relationElement = (Element) itRelations.next();
-            final String structureID = XmlHandling.getChildElementTextValue(relationElement,
-                    CmsImportExportManager.N_RELATION_ATTRIBUTE_ID);
-            final String targetPath = XmlHandling.getChildElementTextValue(relationElement,
-                    CmsImportExportManager.N_RELATION_ATTRIBUTE_PATH);
-            final String relationType = XmlHandling.getChildElementTextValue(relationElement,
-                    CmsImportExportManager.N_RELATION_ATTRIBUTE_TYPE);
-            final CmsUUID targetId = new CmsUUID(structureID);
-            final CmsRelationType type = CmsRelationType.valueOf(relationType);
+		while (itRelations.hasNext()) {
+			final Element relationElement = (Element) itRelations.next();
+			final String structureID = XmlHandling.getChildElementTextValue(
+					relationElement,
+					CmsImportExportManager.N_RELATION_ATTRIBUTE_ID);
+			final String targetPath = XmlHandling.getChildElementTextValue(
+					relationElement,
+					CmsImportExportManager.N_RELATION_ATTRIBUTE_PATH);
+			final String relationType = XmlHandling.getChildElementTextValue(
+					relationElement,
+					CmsImportExportManager.N_RELATION_ATTRIBUTE_TYPE);
+			final CmsUUID targetId = new CmsUUID(structureID);
+			final CmsRelationType type = CmsRelationType.valueOf(relationType);
 
-            final CmsRelation relation = new CmsRelation(resource.getStructureId(),
-                    resource.getRootPath(), targetId, targetPath, type);
+			final CmsRelation relation = new CmsRelation(resourceUUID,
+					resourcePath, targetId, targetPath, type);
 
-            relations.add(relation);
-        }
-
-        if (!relations.isEmpty()) {
-            this.m_importedRelations.put(resource.getRootPath(), relations);
-        }
-    }
+			relations.add(relation);
+		}
+		return relations;
+	}
 
     /**
      * Convert a given timestamp from a String format to a long value.
