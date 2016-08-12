@@ -9,7 +9,11 @@
     <groupId>com.comundus.maven</groupId>
     <artifactId>vfs-maven-plugin</artifactId>
     <packaging>maven-plugin</packaging>
+<<<<<<< HEAD
     <version>10.0.1</version>
+=======
+    <version>9.5.3a</version>
+>>>>>>> refs/remotes/origin/master
     <name>VFS Maven Plugin</name>
     <url>http://opencms-maven.comundus.com</url>
     <!--
