@@ -13,6 +13,7 @@ import com.comundus.opencms.VfsSync;
  * folder(s).
  *
  * @goal sync
+ * @requiresDependencyResolution 
  */
 
 public class SyncMojo extends AbstractVfsMojo {
