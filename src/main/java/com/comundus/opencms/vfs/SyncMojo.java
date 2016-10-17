@@ -13,6 +13,7 @@ import com.comundus.opencms.VfsSync;
  * folder(s).
  *
  * @goal sync
+ * @requiresDependencyResolution 
  */
 
 public class SyncMojo extends AbstractVfsMojo {
@@ -80,14 +81,28 @@ public class SyncMojo extends AbstractVfsMojo {
     private List <SyncResource>syncResources;
 
     /**
+     * List of name patterns to add to the ignored list.
+     * <p>The original list is taken from ANT and contains, among others, .git, .svn and CVS: 
+     * http://ant.apache.org/manual/dirtasks.html#defaultexcludes
      * @parameter
      */
     private List <String>ignoredNames;
 
     /**
+     * List of name patterns to remove from the ignored list
      * @parameter
      */
     private List <String> notIgnoredNames;
+    
+    /**
+     * Delete RFS resources.
+     * 
+     * <p>To avoid problems with version control systems, the default behaviour when files have been deleted from
+     * the VFS, is to print a warning for each resource. If this parameter is set to {@code true}, the files and folders
+     * will be deleted from the RFS. 
+     * @parameter default-value="false"
+     */
+    private boolean deleteRFSResources;
 
     /**
      * Performs VFS synchronisation.
@@ -132,7 +147,7 @@ public class SyncMojo extends AbstractVfsMojo {
         	sync.setDebugEnabled(this.getLog().isDebugEnabled());
                 sync.execute(
                     getWebappDirectory(), this.syncSourceDirectory, this.syncMetadataDirectory, this.syncVFSPaths,
-                    this.syncResources, this.ignoredNames, this.notIgnoredNames, getAdminPassword());
+                    this.syncResources, this.ignoredNames, this.notIgnoredNames, this.deleteRFSResources, getAdminPassword());
         } catch (NoClassDefFoundError e) {
             throw new MojoExecutionException("Failed to load " +
                 SyncMojo.SHELLCLASS, e);
