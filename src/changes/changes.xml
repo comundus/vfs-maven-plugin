@@ -1,82 +1,89 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
-<!-- see http://maven.apache.org/maven-1.x/plugins/changes/ -->
-<!-- Action types: add, fix, remove, update -->
-<document>
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- see https://maven.apache.org/plugins/maven-changes-plugin/changes.html -->
+<document xmlns="http://maven.apache.org/changes/1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/changes/1.0.0 http://maven.apache.org/xsd/changes-1.0.0.xsd">
     <properties>
         <title>Maven VFS Plugin Changes</title>
         <author email="a.rodriguez@comundus.com">Adrian Rodriguez</author>
     </properties>
     <body>
-       	<release version="9.5.1a" date="2015-07" description="Bugfix for user import/export">
-       		<action dev="ar" type="fix">Import and export of users works now</action>
-    	</release>    
-    	<release version="9.5.1" date="2015-04" description="Based on OpenCms 9.5.1">
-    		<action dev="ar" type="update">Updated to new OpenCms version 9.5.1</action>
-    	</release>
-    	<release version="9.0.1b" date="2014-02-26" description="">
-    		<action dev="Alexey Chirkov" type="update">vfs-sync:Add OpenCms cache clear after VFS resource syncronization</action>
-    		<action dev="Alexey Chirkov" type="update">vfs-sync:Do not ignore hidden files</action>
-    		<action dev="ar" type="add">Ignorable file patterns configurable with &lt;ignoredFiles&gt; and &lt;notIgnoredFiles&gt;</action>
-    		<action dev="ar" type="add">Internal: It is possible to differentiate DEBUG and INFO messages from the Vfs* classes. Added DEBUG messages in VfsSync</action>
-    	</release>
-    	<release version="9.0.1a" date="2014-02-26" description="">
-    		<action dev="ar" type="update">Checkstyle and PMD configuration are retrieved from the Maven repository</action>
-    	</release>
-	    <release version="9.0.1" date="2014-02-19" description="Version 9.0.1">
-	       	<action dev="ar" type="update">Updated to new OpenCms version which is 9.0.1</action>
-	       	<action dev="ar" type="update">Using new comundus defaults: comundus-parent 1.4</action>
-	       	<action dev="ar" type="fix">Repaired report generation, compatible with Maven 3.0.4+ and (presumably)2.2.1</action>
-		</release>
-	    <release version="9.0.0" date="2014-01-09" description="Version 9.0.0">
-	       	<action dev="tkj" type="update">Updated to new OpenCms version which is 9.0.0</action>
-		</release>  
+        <release version="10.0.1a" date="2016-10-24" description="Service release">
+            <action dev="Alexey Chirkov" type="update">vfs-sync: Improve mechanism which determines if a file in VFS or RFS were changed</action>
+            <action dev="Alexey Chirkov" type="add">New goal vfs:reindex-all</action>
+        </release>
+        <release version="10.0.1" date="2016-08-12" description="Based on OpenCms 10.0.1">
+            <action dev="ks" type="update">Updated to new OpenCms version 10.0.1</action>
+        </release>
+        <release version="9.5.1a" date="2015-07" description="Bugfix for user import/export">
+            <action dev="ar" type="fix">Import and export of users works now</action>
+        </release>
+        <release version="9.5.1" date="2015-04" description="Based on OpenCms 9.5.1">
+            <action dev="ar" type="update">Updated to new OpenCms version 9.5.1</action>
+        </release>
+        <release version="9.0.1b" date="2014-02-26" description="">
+            <action dev="Alexey Chirkov" type="update">vfs-sync:Add OpenCms cache clear after VFS resource syncronization</action>
+            <action dev="Alexey Chirkov" type="update">vfs-sync:Do not ignore hidden files</action>
+            <action dev="ar" type="add">Ignorable file patterns configurable with &lt;ignoredFiles&gt; and &lt;notIgnoredFiles&gt;</action>
+            <action dev="ar" type="add">Internal: It is possible to differentiate DEBUG and INFO messages from the Vfs* classes. Added DEBUG messages in VfsSync</action>
+        </release>
+        <release version="9.0.1a" date="2014-02-26" description="">
+            <action dev="ar" type="update">Checkstyle and PMD configuration are retrieved from the Maven repository</action>
+        </release>
+        <release version="9.0.1" date="2014-02-19" description="Version 9.0.1">
+            <action dev="ar" type="update">Updated to new OpenCms version which is 9.0.1</action>
+            <action dev="ar" type="update">Using new comundus defaults: comundus-parent 1.4</action>
+            <action dev="ar" type="fix">Repaired report generation, compatible with Maven 3.0.4+ and (presumably)2.2.1</action>
+        </release>
+        <release version="9.0.0" date="2014-01-09" description="Version 9.0.0">
+            <action dev="tkj" type="update">Updated to new OpenCms version which is 9.0.0</action>
+        </release>  
         <release version="8.5.2" date="2013-07-24" description="Version 8.5.2">
-	       	<action dev="ar" type="update">updated to new OpenCms version which is 8.5.2</action>
-	       	<action dev="ar" type="update">Using GitHub as main VCS</action>
-	       	<action dev="ar" type="update">Using new comundus defaults: comundus-parent 1.2</action>		
-		</release>
+            <action dev="ar" type="update">updated to new OpenCms version which is 8.5.2</action>
+            <action dev="ar" type="update">Using GitHub as main VCS</action>
+            <action dev="ar" type="update">Using new comundus defaults: comundus-parent 1.2</action>
+        </release>
         <release version="8.5.1b" date="2013-07-19" description="Fixed regression">
-        	<action dev="ar" type="fix">Resources starting with dot are imported. Resources starting with '.git' and its contents are not imported</action>
+            <action dev="ar" type="fix">Resources starting with dot are imported. Resources starting with '.git' and its contents are not imported</action>
         </release>            
         <release version="8.5.1a" date="2013-07-02" description="Fixes">
-        	<action dev="ar" type="update">Merging syncVfsPaths and syncResources instead of joining them</action>
-        	<action dev="ar" type="fix">Honor skipVfs parameter in some missing goals</action>
-        </release>        
-        <release version="8.5.1" date="2013-02-11" description="Version 8.5.1">
-        	<action dev="ks" type="update">updated to new OpenCms version which is 8.5.1</action>
-        </release>    
-        <release version="8.5.0" date="2012-11-27" description="Version 8.5.0">
-        	<action dev="ks" type="update">updated to new OpenCms version which is 8.5.0</action>
-        </release>    
-        <release version="7.5.2f" date="" description="">
-        	<action dev="tkj" type="fix">Avoids NullPointerException in SyncMojo in debug mode</action>
-        </release>    
-        <release version="7.5.2e" date="2010-08-23" description="vfs:export-module">
-        	<action dev="ar" type="add">Added goal vfs:export-module</action>
+            <action dev="ar" type="update">Merging syncVfsPaths and syncResources instead of joining them</action>
+            <action dev="ar" type="fix">Honor skipVfs parameter in some missing goals</action>
         </release>
-    	<release version="7.5.2d" date="2010-06-16">
-    	    <action dev="ar" type="fix">The excluded resources were not being propagated</action>
-    	    <action dev="ar" type="fix">Bugfix in the check for excluded resources</action>
-    	</release>        
-    	<release version="7.5.2c" date="2010-06-07">
-    	    <action dev="ar" type="fix">vfs:publish was not taking into account the synchronization resources in the new syntax</action>
-    	</release>    
-    	<release version="7.5.2b" date="2010-02-26">
-    	    <action dev="ar" type="fix">The sync in 7.5.2a was not backwards compatible with old poms syntax</action>
+        <release version="8.5.1" date="2013-02-11" description="Version 8.5.1">
+            <action dev="ks" type="update">updated to new OpenCms version which is 8.5.1</action>
+        </release>
+        <release version="8.5.0" date="2012-11-27" description="Version 8.5.0">
+            <action dev="ks" type="update">updated to new OpenCms version which is 8.5.0</action>
+        </release>
+        <release version="7.5.2f" date="" description="">
+            <action dev="tkj" type="fix">Avoids NullPointerException in SyncMojo in debug mode</action>
+        </release>
+        <release version="7.5.2e" date="2010-08-23" description="vfs:export-module">
+            <action dev="ar" type="add">Added goal vfs:export-module</action>
+        </release>
+        <release version="7.5.2d" date="2010-06-16">
+            <action dev="ar" type="fix">The excluded resources were not being propagated</action>
+            <action dev="ar" type="fix">Bugfix in the check for excluded resources</action>
+        </release>
+        <release version="7.5.2c" date="2010-06-07">
+            <action dev="ar" type="fix">vfs:publish was not taking into account the synchronization resources in the new syntax</action>
+        </release>
+        <release version="7.5.2b" date="2010-02-26">
+            <action dev="ar" type="fix">The sync in 7.5.2a was not backwards compatible with old poms syntax</action>
             <action dev="ar" type="add">Added capability to exclude resources from a sync directory</action>
-    	</release>
+        </release>
         <release version="7.5.2a" date="2010-02-23">
             <action dev="ar" type="add">Added goal exportModule</action>
             <action dev="ar" type="add">Added capability in VfsSync to synchronize single files</action>
             <action dev="ar" type="add">Added capability to skip the vfs goals</action>        
         </release>
-    	<release version="7.5.2" date="2010-02">
-    	    <action dev="ks" type="update">updated to work with OpenCms 7.5.2</action>
+        <release version="7.5.2" date="2010-02">
+            <action dev="ks" type="update">updated to work with OpenCms 7.5.2</action>
         </release>
-    	<release version="7.5" date="2009-07-09">
+        <release version="7.5" date="2009-07-09">
             <action dev="ks" type="update">updated to work with OpenCms 7.5</action>
         </release>
-    	<release version="7.0.1f" date="2009-04-27">
+        <release version="7.0.1f" date="2009-04-27">
             <action dev="fn" type="fix">AbstractVfsMojo.getClassLoader() : Checks if WEB-INF/lib exists to give a proper error message </action>
         </release>
         <release version="7.0.1e" date="2009-03-17">
