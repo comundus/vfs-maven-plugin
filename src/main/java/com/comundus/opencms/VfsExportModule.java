@@ -32,14 +32,6 @@ public class VfsExportModule {
     /**
      *
      * Exports a module from the configured OpenCms
-     * Installs a module description in the target OpenCms. Module description
-     * comes from the path given in the parameter configurationXml. The XML file
-     * there contains module description(s) in the format as in WEB-INF/config/opencms-modules.xml
-     * or manifest.xml of an exported module. It may contain multiple modules,
-     * but it must be well formed, say, in case of multiple modules it must have one root node
-     * containing the module entries. These module configuration(s) get added to
-     * WEB-INF/config/opencms-modules.xml of the target installation.
-     * Module content gets sync'ed and published afterwards by the respective plugin goals.
      *
      * @param webappDirectory
      *            path to WEB-INF of the OpenCms installation
@@ -116,6 +108,7 @@ public class VfsExportModule {
         moduleExportHandler.setAdditionalResources(resources);
         moduleExportHandler.setModuleName(module.getName().replace('\\', '/'));
         moduleExportHandler.setDescription(getMessages().key(
+
             Messages.GUI_SHELL_IMPORTEXPORT_MODULE_HANDLER_NAME_1,
             new Object[] {moduleExportHandler.getModuleName()}));
 
