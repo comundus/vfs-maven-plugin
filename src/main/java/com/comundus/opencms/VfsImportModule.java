@@ -2,6 +2,9 @@ package com.comundus.opencms;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
 
 import org.opencms.file.CmsObject;
 import org.opencms.file.CmsRequestContext;
@@ -41,11 +44,12 @@ public class VfsImportModule {
      * @throws SAXException
      *             in case configuration files cannot be parsed
      */
-    public final void execute(final String webappDirectory, final String adminPassword, final String moduleFileName,
-            final String moduleDirectoryName) throws IOException, CmsException, SAXException {
-        if ((null == moduleFileName) && (null == moduleDirectoryName)) {
+    public final void execute(final String webappDirectory, final String adminPassword,
+            final List<String> moduleFileNames, final List<String> moduleDirectoryNames)
+            throws IOException, CmsException, SAXException {
+        if ((null == moduleFileNames) && (null == moduleDirectoryNames)) {
             System.err.println(
-                    "[WARN]VfsImportModule.execute(): moduleFileName or moduleDirectoryName params not defined");
+                    "[WARN]VfsImportModule.execute(): moduleFileNames or moduleDirectoryNames params not defined");
             return;
         }
 
@@ -60,25 +64,48 @@ public class VfsImportModule {
 
             this.setReport(new CmsShellReport(requestcontext.getLocale()));
 
-            // if single module file name defined
-            if (null != moduleFileName) {
-                importModule(moduleFileName, cmsshell.getCmsObject());
+            // if single module file name list defined
+            if (null != moduleFileNames) {
+                importSingleModules(moduleFileNames, cmsshell);
             }
 
-            // if module directory name defined
-            if (null != moduleDirectoryName) {
-                final File moduleDir = new File(moduleDirectoryName);
-                if (!moduleDir.isDirectory()) {
-                    System.err.println("[WARN]VfsImportModule.execute(): moduleFolderName param is not a directory");
-                    return;
-                }
-
-                for (File moduleFile : moduleDir.listFiles()) {
-                    importModule(moduleFile.getAbsolutePath(), cmsshell.getCmsObject());
-                }
+            // if module directory name list defined
+            if (null != moduleDirectoryNames) {
+                importModulesFromDirectories(moduleDirectoryNames, cmsshell);
             }
         } else {
             System.err.println("[WARN]VfsImportModule.execute(): CmsShell not available");
+        }
+    }
+
+    private void importModulesFromDirectories(final List<String> moduleDirectoryNames, final CmOpenCmsShell cmsshell)
+            throws CmsException {
+        for (String moduleDirectoryName : moduleDirectoryNames) {
+            final File moduleDir = new File(moduleDirectoryName);
+            if (!moduleDir.isDirectory()) {
+                System.err
+                        .println("[WARN]VfsImportModule.execute(): \"" + moduleDirectoryName + "\" is not a directory");
+                continue;
+            }
+
+            final List<File> fileNameList = Arrays.asList(moduleDir.listFiles());
+            // sort file list by file name
+            fileNameList.sort(new Comparator<File>() {
+                public int compare(File o1, File o2) {
+                    return o1.getName().compareTo(o2.getName());
+                }
+            });
+
+            for (File moduleFile : moduleDir.listFiles()) {
+                importModule(moduleFile.getAbsolutePath(), cmsshell.getCmsObject());
+            }
+        }
+    }
+
+    private void importSingleModules(final List<String> moduleFileNames, final CmOpenCmsShell cmsshell)
+            throws CmsException {
+        for (String moduleFileName : moduleFileNames) {
+            importModule(moduleFileName, cmsshell.getCmsObject());
         }
     }
 

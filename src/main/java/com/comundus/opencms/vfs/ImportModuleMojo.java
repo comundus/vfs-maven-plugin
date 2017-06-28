@@ -1,6 +1,7 @@
 package com.comundus.opencms.vfs;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.opencms.main.CmsException;
@@ -9,13 +10,19 @@ import org.xml.sax.SAXException;
 import com.comundus.opencms.VfsImportModule;
 
 /**
- * A Maven2 plugin Goal to import a module from module ZIP - file.<br/>
+ * A Maven2 plugin Goal to import a modules from module ZIP - files.<br/>
  *
  * Configuration sample:
  * 
  * <configuration>
- *     <moduleFileName>${project.basedir}/src/main/modules/single_module.zip</moduleFileName>
- *     <moduleDirectoryName>${project.basedir}/src/main/modules/</moduleDirectoryName>
+ *     <moduleFileNames>
+ *         <moduleFileName>${project.basedir}/src/main/modules/single_module_1.zip</moduleFileName>
+ *         <moduleFileName>${project.basedir}/src/main/modules/single_module_2.zip</moduleFileName>
+ *     </moduleFileNames>
+ *     <moduleDirectoryNames>
+ *         <moduleDirectoryName>${project.basedir}/src/main/modules1/</moduleDirectoryName>
+ *         <moduleDirectoryName>${project.basedir}/src/main/modules2/</moduleDirectoryName>         
+ *     </moduleDirectoryNames>
  * </configuration>
  *
  * @goal import-module
@@ -29,18 +36,18 @@ public class ImportModuleMojo extends AbstractVfsMojo {
     private static final String ERROR_MESSAGE = "Failed to instantiate (abstract!)" + ImportModuleMojo.SHELLCLASS;
 
     /**
-     * Single module absolute file name
+     * Module absolute file name list
      * 
-     * @parameter expression="${moduleFileName}"
+     * @parameter
      */
-    private String moduleFileName;
+    private List<String> moduleFileNames;
 
     /**
-     * Module directory absolute name (to import several modules)
+     * Module directory absolute name list (to import several modules)
      * 
-     * @parameter expression="${moduleDirectoryName}"
+     * @parameter
      */
-    private String moduleDirectoryName;
+    private List<String> moduleDirectoryNames;
 
     /**
      * Extracts a module from the targeted OpenCms.
@@ -52,7 +59,7 @@ public class ImportModuleMojo extends AbstractVfsMojo {
 
         try {
             final VfsImportModule module = new VfsImportModule();
-            module.execute(getWebappDirectory(), getAdminPassword(), this.moduleFileName, this.moduleDirectoryName);
+            module.execute(getWebappDirectory(), getAdminPassword(), this.moduleFileNames, this.moduleDirectoryNames);
         } catch (NoClassDefFoundError e) {
             throw new MojoExecutionException("Failed to load " + ImportModuleMojo.SHELLCLASS, e);
         } catch (IOException e) {
