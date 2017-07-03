@@ -7,6 +7,9 @@
         <author email="a.rodriguez@comundus.com">Adrian Rodriguez</author>
     </properties>
     <body>
+        <release version="10.x" date="2017-xx-xx" description="Service release">
+            <action dev="Alexey Chirkov" type="update">New goal vfs-import-module</action>
+        </release>
         <release version="10.0.1a" date="2016-10-24" description="Service release">
             <action dev="Alexey Chirkov" type="update">vfs-sync: Improve mechanism which determines if a file in VFS or RFS were changed</action>
             <action dev="Alexey Chirkov" type="add">New goal vfs:reindex-all</action>
