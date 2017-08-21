@@ -11,6 +11,7 @@ import java.util.Stack;
 
 import org.apache.commons.codec.binary.Base64;
 import org.dom4j.Element;
+import org.dom4j.Node;
 import org.opencms.file.CmsGroup;
 import org.opencms.file.CmsRequestContext;
 import org.opencms.file.CmsUser;
@@ -337,10 +338,10 @@ public class VfsUserImport extends XmlHandling {
     private void importUsers() throws IOException, ClassNotFoundException {
         // getAll user nodes
         @SuppressWarnings("unchecked")
-        final List<Element> userNodes = getDocXml()
+        final List<Node> userNodes = getDocXml()
                                    .selectNodes("//" + CmsImportVersion7.N_USER);
 
-        // walk threw all groups in manifest
+        // walk through all groups in manifest
         for (int i = 0; i < userNodes.size(); i++) {
             final Element currentElement = (Element) userNodes.get(i);
 
