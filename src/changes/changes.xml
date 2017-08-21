@@ -7,6 +7,9 @@
         <author email="a.rodriguez@comundus.com">Adrian Rodriguez</author>
     </properties>
     <body>
+        <release version="10.5.2" date="2017-08-21" description="Based on OpenCms 10.5.2">
+            <action dev="veggie" type="update">Update to new OpenCms version 10.5.2</action>
+        </release>
         <release version="10.x" date="2017-xx-xx" description="Service release">
             <action dev="Alexey Chirkov" type="update">New goal vfs-import-module</action>
         </release>
