@@ -156,6 +156,11 @@ public class VfsSetup {
 
         cmsobject.createResource("/system/modules/", resourceTypeFolder);
         
+        // !!not in cmssetup.txt!!
+        // added because we do not want to sync all resources under
+        // /system/workplace/ later. So we need to create this folder while setup.
+        cmsobject.createResource("/system/workplace/", resourceTypeFolder);
+        
         cmsobject.createResource("/shared/", resourceTypeFolder);
 
         // # Apply folder permissions
