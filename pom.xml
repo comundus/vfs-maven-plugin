@@ -127,6 +127,17 @@
                         </lifecycleMappingMetadata>
                     </configuration>
                 </plugin>
+                <plugin>
+                    <groupId>org.sonarsource.scanner.maven</groupId>
+                    <artifactId>sonar-maven-plugin</artifactId>
+                    <version>3.7.0.1746</version>
+                    <configuration>
+                        <!-- Sets whether the .NET Nuget Nuspec Analyzer will be used. -->
+                        <nuspecAnalyzerEnabled>false</nuspecAnalyzerEnabled>
+                        <!--  Sets whether the .NET Assembly Analyzer should be used. -->
+                        <assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
+                    </configuration>
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>
