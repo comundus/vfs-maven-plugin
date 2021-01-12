@@ -209,32 +209,10 @@ For example, in the update to OpenCms 8.5, these new files and directories were 
 * `WEB-INF/classes/META-INF/persistence.xml`
 * `WEB-INF/classes/ehcache.xml`
 
-## Update versions in opencms-basic
+## Update version in opencms-basic
 
-Now is the moment to update the version numbers in the Maven files of opencms-basic. These are:
-
-    - parent
-      - general-pom.xml
-      - pom.xml
-    - webapp
-      - pom.xml
-    - system
-      - pom.xml
-    - content
-      - pom.xml
-    - orgunits
-      - pom.xml
-
-First, to update the `pom.xml` files, run the goal `versions:set` command from `parent`:
-
-    mvn –DnewVersion=9.5.1 –DgenerateBackupPoms=false versions:set
-    
-Then update the version number in `general-pom.xml` manually, as well as the reference to `general-pom.xml` as
-the parent project in `parent/pom.xml`
-
-Additionally, the property `opencms.version` in `parent/pom.xml` must also be changed. In the case that a 
-bugfix version of the VFS-Plugin will be used, then the property `vfs-plugin.version` should also be set. (e.g. to
-`9.5.1a`)
+Now is the moment to update the version number in the general-pom.xml of opencms-basic/parent. 
+The version number is in the properties section as 'revision'. The other poms will automatically be updated to this version.
 
 ## Update VFS resources
 
@@ -313,7 +291,6 @@ or just take them later from the VCS.
 * **[project system]**`/src/main/vfs-metadata/system/info/version.xml`
 * **[project system]**`/src/main/vfs/system/.gitignore`
 * **[project system]**`/src/main/vfs/system/categories/.gitignore`
-* **[project system]**`/src/main/vfs/system/galleries/.gitignore`
 
 4) Execute the synchronisation
 

@@ -152,7 +152,7 @@ public class VfsSetup {
         // from synchronizing VFS /sites/default/ in the webapp
         //cmsobject.createResource("/sites/default/",
         //CmsResourceTypeFolder.RESOURCE_TYPE_ID);
-        cmsobject.createResource("/system/lost-found/", resourceTypeFolder);
+        //cmsobject.createResource("/system/lost-found/", resourceTypeFolder);
 
         cmsobject.createResource("/system/modules/", resourceTypeFolder);
         
@@ -185,8 +185,8 @@ public class VfsSetup {
         // chacc "/system" "role" "WORKPLACE_USER" "+r+i"
         cmsobject.chacc("/system", "role", "WORKPLACE_USER", "+r+i");
         // chacc "/system/lost-found" "role" "WORKPLACE_MANAGER" "+v+w+r+c+d+i"
-        cmsobject.chacc("/system/lost-found", "role", "WORKPLACE_MANAGER",
-            "+v+w+r+c+d+i");
+        //cmsobject.chacc("/system/lost-found", "role", "WORKPLACE_MANAGER",
+        //    "+v+w+r+c+d+i");
 		// chacc "/system/modules" "role" "WORKPLACE_USER" "+v+r+i"
         cmsobject.chacc("/system/modules", "role", "WORKPLACE_USER",
             "+v+r+i");
