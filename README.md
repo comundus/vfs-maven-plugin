@@ -1,3 +1,8 @@
+**Attention:**
+The plugin is not running with Maven Version > 3.5.4.
+
+---
+
 To use `vfs-maven-plugin` in the build, following repository has to be defined in your Maven `settings.xml`
 
 	<repository>
@@ -12,5 +17,4 @@ This other one is possibly not needed anymore
         <name>Java.net Repository for Maven</name>
         <url>http://download.java.net/maven/2/</url>
         <layout>default</layout>
-    </repository>    
-
+    </repository>
