@@ -2284,7 +2284,7 @@ public class VfsSync extends XmlHandling {
                 userNameCreated = OpenCms.getDefaultUsers().getUserAdmin();
             }
 
-            // in OpenCms 6.2.3 f�llt das escapeXml weg,
+            // in OpenCms 6.2.3 fällt das escapeXml weg,
             // weil es allgemein im CmsXmlSaxWriter geregelt wird
             // siehe XmlHandling
             fileElement.addElement(CmsImportExportManager.N_USERCREATED)
