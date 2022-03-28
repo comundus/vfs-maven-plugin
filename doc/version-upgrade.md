@@ -32,7 +32,7 @@ image:
 
 [projects]: projects.png "Projects in package explorer"
 
-## Update mvn-vfs-plugin
+## Update vfs-maven-plugin
 
 For each OpenCms version, a new version of the VFS-Plugin will be created, because at least the dependency version to 
 OpenCms changes. It is possible that changes in OpenCms make necessary to change the source code of the plugin.
