@@ -9,7 +9,7 @@
     <groupId>com.comundus.maven</groupId>
     <artifactId>vfs-maven-plugin</artifactId>
     <packaging>maven-plugin</packaging>
-    <version>13.0</version>
+    <version>14.0</version>
     <name>VFS Maven Plugin</name>
     <url>http://opencms-maven.comundus.com</url>
     <description>Maven plugin for synchronizing OpenCms VFS data with project sources.</description>
@@ -55,7 +55,7 @@
     </scm>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <opencms.version>13.0</opencms.version>
+        <opencms.version>14.0</opencms.version>
         <java.version>11</java.version>
         <sonar.host.url>https://devop.comundus.com/sonarqube</sonar.host.url>
         <sonar.projectVersion>${project.version}-b${BUILD_NUMBER}</sonar.projectVersion>
@@ -185,6 +185,10 @@
                 <exclusion>
                     <groupId>org.slf4j</groupId>
                     <artifactId>slf4j-api</artifactId>
+                </exclusion>
+                <exclusion>
+                	<groupId>xml-apis</groupId>
+                	<artifactId>xml-apis</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
