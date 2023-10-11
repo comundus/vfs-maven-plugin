@@ -4,11 +4,7 @@ import org.apache.commons.logging.LogFactory;
 import org.opencms.configuration.CmsParameterConfiguration;
 import org.opencms.db.CmsLoginMessage;
 import org.opencms.file.CmsObject;
-import org.opencms.main.CmsException;
-import org.opencms.main.OpenCms;
-import org.opencms.main.OpenCmsCore;
 
-//import org.opencms.util.CmsPropertyUtils;
 
 import java.io.IOException;
 
