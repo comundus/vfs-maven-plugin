@@ -125,24 +125,19 @@ public final class CmOpenCmsShell {
         
         // first initialize runlevel 1
         this.opencmsCore = OpenCmsCore.getInstance();
-        // set the path to the WEB-INF folder
-        // the other parameters are just dummies for servletPath and
-        // webappName
+        
+        // set the path to the WEB-INF folder (the 2nd and 3rd parameters are just reasonable dummies)
         CmsServletContainerSettings settings = new CmsServletContainerSettings(
-                this.webinfPath,                
+                this.webinfPath,
                 "ROOT",
                 "/opencms/*",
                 null,
                 null);
-        this.opencmsCore.getSystemInfo().init(settings);        
-        //                .init(this.webinfPath, "/opencms/*", null, "opencms", null/*, true*/);//Last parameter was removed in 7.5
-        											//Long signature was removed in 7.5.2
-
+        this.opencmsCore.getSystemInfo().init(settings);
         // now read the configuration properties
-        final String propertyPath = this.opencmsCore.getSystemInfo()
-                                                    .getConfigurationFileRfsPath();
-        //final ExtendedProperties configuration = CmsPropertyUtils.loadProperties(propertyPath);
-        final CmsParameterConfiguration configuration=new CmsParameterConfiguration(propertyPath);
+        final String propertyPath = this.opencmsCore.getSystemInfo().getConfigurationFileRfsPath();
+        
+        final CmsParameterConfiguration configuration = new CmsParameterConfiguration(propertyPath);
         // now upgrade to runlevel 2
         // requires servlet-api indirectly
         // this adds some rows to an empty database:
@@ -159,9 +154,9 @@ public final class CmOpenCmsShell {
         // CMS_TASKTYPE: Ad-Hoc
         // CMS_USERS: Export, Guest, Admin
         this.opencmsCore = this.opencmsCore.upgradeRunlevel(configuration);
+
         // create a context object with 'Guest' permissions
-        this.cmsObject = this.opencmsCore.initCmsObject(this.opencmsCore.getDefaultUsers()
-                                                                        .getUserGuest());
+        this.cmsObject = this.opencmsCore.initCmsObject(this.opencmsCore.getDefaultUsers().getUserGuest());
 
         // initialize the settings of the user
         // initSettings(); // sets userSettings

@@ -9,8 +9,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.PrintWriter;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,7 +39,7 @@ import org.opencms.i18n.CmsEncoder;
 import org.opencms.i18n.CmsMessageContainer;
 import org.opencms.importexport.CmsImportExportException;
 import org.opencms.importexport.CmsImportExportManager;
-import org.opencms.importexport.CmsImportVersion7;
+import org.opencms.importexport.CmsImportVersion10;
 import org.opencms.loader.CmsLoaderException;
 import org.opencms.main.CmOpenCmsShell;
 import org.opencms.main.CmsEvent;
@@ -68,7 +66,7 @@ import org.xml.sax.SAXException;
 import com.comundus.opencms.vfs.SyncResource;
 
 /**
- * Performs VFS synchronisation.
+ * Performs VFS synchronization.
  *
  * methods taken from org.opencms.synchronize.CmsSynchronize and from
  * org.opencms.importexport.CmsExport
@@ -108,11 +106,11 @@ public class VfsSync extends XmlHandling {
     /** Counter for logging. */
     private int count;
 
-    /** Hashmap for the synchronisation list of the last sync process. */
+    /** Hashmap for the synchronization list of the last sync process. */
     private Map syncList;
 
-    /** Hashmap for the new synchronisation list of the current sync process. */
-    private Map newSyncList;
+    /** Hashmap for the new synchronization list of the current sync process. */
+    private Map<String, CmsSynchronizeList> newSyncList;
 
     /**
      * as we do not remove files from RFS we need to keep this List of
@@ -124,7 +122,7 @@ public class VfsSync extends XmlHandling {
     private Map m_importedRelations;
 
     /** Stores all resources of any type that implements the {@link I_CmsLinkParseable} interface. */
-    private List m_parseables;
+    private List<CmsResource> m_parseables;
 
     private FileFilter ignoredFilesFilter;
 
@@ -138,7 +136,7 @@ public class VfsSync extends XmlHandling {
      * synchronization data about the last synchronization status get stored in
      * a file "#synclist.txt" in the uppermost content folder. "#synclist.txt"
      * is NOT stored in version control as it reflects the local
-     * synchronisation state which must not be transfered to other developers.
+     * synchronization state which must not be transfered to other developers.
      * XML Metadata corresponds to the OpenCms Import/Export format version 4.
      *
      * @param webappDirectory
@@ -174,8 +172,8 @@ public class VfsSync extends XmlHandling {
 	this.metadataPathInRfs = mPathInRfs;
 	this.count = 1;
 
-	this.m_parseables = new ArrayList();
-	this.m_importedRelations = new HashMap();
+	this.m_parseables = new ArrayList<>();
+	this.m_importedRelations = new HashMap<>();
 
 	final String webinfdir = webappDirectory + File.separatorChar +
 		"WEB-INF";
@@ -191,19 +189,10 @@ public class VfsSync extends XmlHandling {
 	requestcontext.setCurrentProject(offlineProject);
 	// do the synchronization only if the synchronization folders in
 	// the VFS and the FS are valid
-	// store the current site root
-	// I think we don't need that here
-	// requestcontext.saveSiteRoot();
 	// set site to root site
 	requestcontext.setSiteRoot("/");
 
 	// code taken from org.opencms.synchronize.CmsSynchronize
-	// OpenCms.fireCmsEvent(new
-	// CmsEvent(I_CmsEventListener.EVENT_CLEAR_CACHES,
-	// Collections.EMPTY_MAP));
-	// OpenCms.fireCmsEvent(new
-	// CmsEvent(I_CmsEventListener.EVENT_CLEAR_OFFLINE_CACHES,
-	// Collections.EMPTY_MAP));
 	// check if target folder exists and is writeable
 	final File destinationFolder = new File(this.destinationPathInRfs);
 
@@ -221,12 +210,6 @@ public class VfsSync extends XmlHandling {
 			    this.destinationPathInRfs));
 	}
 
-	// clear all caches
-	// m_report.println(Messages.get().container(org.opencms.importexport.Messages.RPT_CLEARCACHE_0),
-	// I_CmsReport.FORMAT_NOTE);
-	// OpenCms.fireCmsEvent(new
-	// CmsEvent(I_CmsEventListener.EVENT_CLEAR_CACHES,
-	// Collections.EMPTY_MAP));
 	syncResources = mergeSyncResourceLists(syncVFSPaths, syncResources);
 
 	computeIgnoredNames(ignoredNames, notIgnoredNames);
@@ -241,17 +224,13 @@ public class VfsSync extends XmlHandling {
 	this.getCms().unlockProject(offlineProject.getUuid());
     }
 
-	private void clearAllCaches() {
-		OpenCms.fireCmsEvent(I_CmsEventListener.EVENT_CLEAR_CACHES,
-				Collections.<String, Object> emptyMap());
-		OpenCms.fireCmsEvent(new CmsEvent(
-				I_CmsEventListener.EVENT_FLEX_PURGE_JSP_REPOSITORY, Collections
-						.<String, Object> emptyMap()));
-		OpenCms.fireCmsEvent(new CmsEvent(
-				I_CmsEventListener.EVENT_FLEX_CACHE_CLEAR, Collections
-						.<String, Object> singletonMap("action", new Integer(
-								CmsFlexCache.CLEAR_ENTRIES))));
-	}
+    private void clearAllCaches() {
+        OpenCms.fireCmsEvent(I_CmsEventListener.EVENT_CLEAR_CACHES, Collections.<String, Object> emptyMap());
+        OpenCms.fireCmsEvent(new CmsEvent(I_CmsEventListener.EVENT_FLEX_PURGE_JSP_REPOSITORY, 
+                Collections.<String, Object> emptyMap()));
+        OpenCms.fireCmsEvent(new CmsEvent(I_CmsEventListener.EVENT_FLEX_CACHE_CLEAR, 
+                Collections.<String, Object> singletonMap("action", Integer.valueOf(CmsFlexCache.CLEAR_ENTRIES))));
+    }
 
     /*
     Methodenabfolge der Synchronisation (pro konfiguriertem VFS Pfad):
@@ -279,12 +258,11 @@ public class VfsSync extends XmlHandling {
 
         // create the sync list for this run
         this.syncList = this.readSyncList();
-        this.newSyncList = new HashMap();
-        this.removeRfsList = new ArrayList();
+        this.newSyncList = new HashMap<>();
+        this.removeRfsList = new ArrayList<>();
 
         for (SyncResource sourcePathInVfs:syncResources) {
             // iterate through all configured VFS folders
-            //final String sourcePathInVfs = (String) i.next();
             final String destPath = this.destinationPathInRfs +
                 sourcePathInVfs.getResource().replace('/', File.separatorChar);
             this.getReport()
@@ -558,7 +536,7 @@ public class VfsSync extends XmlHandling {
     }
 
     /**
-     * Deletes a resource in the VFS and updates the synchronisation lists.
+     * Deletes a resource in the VFS and updates the synchronization lists.
      * <p>
      *
      * @param res
@@ -667,7 +645,7 @@ public class VfsSync extends XmlHandling {
     }
 
     /**
-     * Exports a resource from the VFS to the RFS and updates the synchronisation
+     * Exports a resource from the VFS to the RFS and updates the synchronization
      * lists.
      * <p>
      *
@@ -806,7 +784,7 @@ public class VfsSync extends XmlHandling {
                                                          .container(org.opencms.synchronize.Messages.ERR_WRITE_FILE_0));
                 }
 
-                // add resource to synchronisation list
+                // add resource to synchronization list
                 final CmsSynchronizeList sList = new CmsSynchronizeList(resourcename,
                         this.translate(resourcename),
                         res.getDateLastModified(), fsFile.lastModified());
@@ -848,7 +826,7 @@ public class VfsSync extends XmlHandling {
 
     /**
      * Imports a new resource from the RFS into the VFS and updates the
-     * synchronisation lists.
+     * synchronization lists.
      * <p>
      *
      * @param fsFile
@@ -929,7 +907,7 @@ public class VfsSync extends XmlHandling {
                         metadataFile.getAbsolutePath()));
             }
 
-            // add resource to synchronisation list
+            // add resource to synchronization list
             final CmsSynchronizeList sList = new CmsSynchronizeList(resName,
                     this.translate(resName), newFile.getDateLastModified(),
                     fsFile.lastModified());
@@ -946,21 +924,21 @@ public class VfsSync extends XmlHandling {
     }
 
     /**
-     * Reads the synchronisation list from the last sync process from the file
+     * Reads the synchronization list from the last sync process from the file
      * system and stores the information in a HashMap. If the file does
      * not exist in the file system an empty HashMap is returned.
      * <p>
      *
      * Filenames are stored as keys, CmsSynchronizeList objects as values.
      *
-     * @return HashMap with synchronisation information of the last sync process
+     * @return HashMap with synchronization information of the last sync process
      * @throws CmsException
      *             if something goes wrong
      */
 
     // code taken from org.opencms.synchronize.CmsSynchronize
-    private Map readSyncList() throws CmsException {
-        final Map sList = new HashMap();
+    private Map<String, CmsSynchronizeList> readSyncList() throws CmsException {
+        final Map<String, CmsSynchronizeList> sList = new HashMap<>();
 
         // the sync list file in the server fs
         File syncListFile;
@@ -970,12 +948,9 @@ public class VfsSync extends XmlHandling {
         // try to read the sync list file if it is there
         if (syncListFile.exists()) {
             // prepare the streams to write the data
-            FileReader fIn = null;
-            LineNumberReader lIn = null;
 
-            try {
-                fIn = new FileReader(syncListFile);
-                lIn = new LineNumberReader(fIn);
+            try(FileReader fIn = new FileReader(syncListFile);
+                LineNumberReader lIn = new LineNumberReader(fIn);) {
 
                 // read one line from the file
                 String line = lIn.readLine();
@@ -992,8 +967,8 @@ public class VfsSync extends XmlHandling {
                         //if (tok != null) {
                         final String resName = tok.nextToken();
                         final String tranResName = tok.nextToken();
-                        final long modifiedVfs = new Long(tok.nextToken()).longValue();
-                        final long modifiedFs = new Long(tok.nextToken()).longValue();
+                        final long modifiedVfs = Long.parseLong(tok.nextToken());
+                        final long modifiedFs = Long.parseLong(tok.nextToken());
                         final CmsSynchronizeList sync = new CmsSynchronizeList(resName,
                                 tranResName, modifiedVfs, modifiedFs);
                         sList.put(this.translate(resName), sync);
@@ -1005,19 +980,6 @@ public class VfsSync extends XmlHandling {
                 throw new CmsSynchronizeException(org.opencms.synchronize.Messages.get()
                                                       .container(org.opencms.synchronize.Messages.ERR_READ_SYNC_LIST_0),
                     e);
-            } finally {
-                // close all streams that were used
-                try {
-                    if (lIn != null) {
-                        lIn.close();
-                    }
-
-                    if (fIn != null) {
-                        fIn.close();
-                    }
-                } catch (final IOException e) {
-                    // ignore
-                }
             }
         }
 
@@ -1195,14 +1157,13 @@ public class VfsSync extends XmlHandling {
 
 	int posAst = Arrays.binarySearch(sortedArray, "*");
 	int posStr = Arrays.binarySearch(sortedArray, str);
-	boolean b = posAst >= 0 || posStr >= 0;
+	return posAst >= 0 || posStr >= 0;
 
-	return b;
     }
 
     /**
-     * Updates the synchronisation lists if a resource is not used during the
-     * synchronisation process.
+     * Updates the synchronization lists if a resource is not used during the
+     * synchronization process.
      * <p>
      *
      * @param res
@@ -1212,17 +1173,17 @@ public class VfsSync extends XmlHandling {
     private void skipResource(final CmsResource res) {
 	// add the file to the new sync list...
 	final String resname = this.getCms().getSitePath(res);
-    final CmsSynchronizeList sync = (CmsSynchronizeList) this.syncList.get(this.translate(
-    		resname));
-    final File fsFile = this.getFileInRfs(sync.getResName());
-    final File metadataFile;
-    if (res.isFolder()) {
-    	metadataFile = this.getMetadataFolderInRfs(sync.getResName());
-    } else {
-    	metadataFile = this.getMetadataFileInRfs(sync.getResName());
-    }
-    final long rfslastmod = Math.max(fsFile.lastModified(),
-	    metadataFile.lastModified());
+        final CmsSynchronizeList sync = (CmsSynchronizeList) this.syncList.get(this.translate(
+        		resname));
+        final File fsFile = this.getFileInRfs(sync.getResName());
+        final File metadataFile;
+        if (res.isFolder()) {
+        	metadataFile = this.getMetadataFolderInRfs(sync.getResName());
+        } else {
+        	metadataFile = this.getMetadataFileInRfs(sync.getResName());
+        }
+        final long rfslastmod = Math.max(fsFile.lastModified(),
+    	    metadataFile.lastModified());
 	final CmsSynchronizeList sList = new CmsSynchronizeList(sync.getResName(),
             this.translate(resname), sync.getModifiedVfs(), rfslastmod);
 	this.newSyncList.put(this.translate(resname), sList);
@@ -1276,7 +1237,7 @@ public class VfsSync extends XmlHandling {
 
         // in contrast to plain OpenCms Sync, we need to export the start
         // folders ~folder.xml -- as well as single files
-        // first check if this folder is a folder and must be synchronised
+        // first check if this folder is a folder and must be synchronized
 
         CmsResource res = null;
         if (startfolder) {
@@ -1326,13 +1287,13 @@ public class VfsSync extends XmlHandling {
         	    .getResourcesInFolder(sourcePathInVfs.getResource(),
         		    CmsResourceFilter.IGNORE_EXPIRATION);
         } else {
-            resources = new ArrayList<CmsResource>();
+            resources = new ArrayList<>();
             //resources.add(res); //This resource has been already correctly synchronized
         }
 
         // now look through all resources in the folder
         for (int i = 0; i < resources.size(); i++) {
-            res = (CmsResource) resources.get(i);
+            res = resources.get(i);
 
             // test if the resource is marked as deleted. if so,
             // do nothing, the corresponding file in the RFS will be removed later
@@ -1414,7 +1375,7 @@ public class VfsSync extends XmlHandling {
     }
 
     /**
-     * Determines the synchronisation status of a VFS resource.
+     * Determines the synchronization status of a VFS resource.
      *
      * @param res
      *            the VFS resource to check
@@ -1516,8 +1477,8 @@ public class VfsSync extends XmlHandling {
 	 */
 	private boolean isFileWasChanged(final File fsFile,
 			final CmsResource resource) {
-		final Map<String, Object> fsFileParams = new HashMap<String, Object>();
-		final Map<String, Object> vfsFileParams = new HashMap<String, Object>();
+		final Map<String, Object> fsFileParams = new HashMap<>();
+		final Map<String, Object> vfsFileParams = new HashMap<>();
 		try {
 			fillFileParamMap(fsFileParams, null, false);
 			fillFileParamMap(vfsFileParams, resource, true);
@@ -1560,13 +1521,13 @@ public class VfsSync extends XmlHandling {
 							.equals((Long) fsFileParams.get(key))) {
 				return true;
 			}
-			if (CmsImportVersion7.N_PROPERTIES.equals(key)
+			if (CmsImportVersion10.N_PROPERTIES.equals(key)
 					&& !isListEquals((List<CmsProperty>) fsFileParams.get(key),
 							(List<CmsProperty>) vfsFileParams.get(key),
 							propertyComparator)) {
 				return true;
 			}
-			if (CmsImportVersion7.N_ACCESSCONTROL_ENTRIES.equals(key)
+			if (CmsImportVersion10.N_ACCESSCONTROL_ENTRIES.equals(key)
 					&& !isListEquals((List<CmsAccessControlEntry>) fsFileParams
 							.get(key),
 							(List<CmsAccessControlEntry>) vfsFileParams
@@ -1574,13 +1535,13 @@ public class VfsSync extends XmlHandling {
 							CmsAccessControlEntry.COMPARATOR_ACE)) {
 				return true;
 			}
-			if (CmsImportVersion7.N_RELATIONS.equals(key)
+			if (CmsImportVersion10.N_RELATIONS.equals(key)
 					&& !isListEquals((List<CmsRelation>) fsFileParams.get(key),
 							(List<CmsRelation>) vfsFileParams.get(key),
 							CmsRelation.COMPARATOR)) {
 				return true;
 			}
-			if (CmsImportVersion7.N_TYPE.equals(key)
+			if (CmsImportVersion10.N_TYPE.equals(key)
 					&& !((I_CmsResourceType) vfsFileParams.get(key))
 							.isIdentical((I_CmsResourceType) fsFileParams
 									.get(key))) {
@@ -1675,26 +1636,26 @@ public class VfsSync extends XmlHandling {
 	private void fillFileParamMap(final Map<String, Object> fileParamMap,
 			final CmsResource resource, final boolean readParamFromVfsFile)
 			throws Exception {
-		List ignoredProperties = OpenCms.getImportExportManager()
+		List<String> ignoredProperties = OpenCms.getImportExportManager()
 				.getIgnoredProperties();
 		if (ignoredProperties == null) {
-			ignoredProperties = Collections.EMPTY_LIST;
+			ignoredProperties = Collections.emptyList();
 		}
 		final Element currentElement = (Element) this.getDocXml()
-				.selectNodes("//" + CmsImportVersion7.N_FILE).get(0);
+				.selectNodes("//" + CmsImportVersion10.N_FILE).get(0);
 
 		// <type>
 		final I_CmsResourceType type = readParamFromVfsFile ? OpenCms
 				.getResourceManager().getResourceType(resource) : OpenCms
 				.getResourceManager().getResourceType(
 						XmlHandling.getChildElementTextValue(currentElement,
-								CmsImportVersion7.N_TYPE));
-		fileParamMap.put(CmsImportVersion7.N_TYPE, type);
+								CmsImportVersion10.N_TYPE));
+		fileParamMap.put(CmsImportVersion10.N_TYPE, type);
 
 		// <destination>
 		final String destination = XmlHandling.getChildElementTextValue(
-				currentElement, CmsImportVersion7.N_DESTINATION);
-		fileParamMap.put(CmsImportVersion7.N_DESTINATION,
+				currentElement, CmsImportVersion10.N_DESTINATION);
+		fileParamMap.put(CmsImportVersion10.N_DESTINATION,
 				readParamFromVfsFile ? this.getCms().getSitePath(resource)
 						: "/" + destination + (type.isFolder() ? "/" : ""));
 
@@ -1702,78 +1663,78 @@ public class VfsSync extends XmlHandling {
 		final String uuidstructure = readParamFromVfsFile ? resource
 				.getStructureId().toString() : XmlHandling
 				.getChildElementTextValue(currentElement,
-						CmsImportVersion7.N_UUIDSTRUCTURE);
-		fileParamMap.put(CmsImportVersion7.N_UUIDSTRUCTURE, uuidstructure);
+						CmsImportVersion10.N_UUIDSTRUCTURE);
+		fileParamMap.put(CmsImportVersion10.N_UUIDSTRUCTURE, uuidstructure);
 
 		// <uuidresource>
 		if (!type.isFolder()) {
 			fileParamMap.put(
-					CmsImportVersion7.N_UUIDRESOURCE,
+					CmsImportVersion10.N_UUIDRESOURCE,
 					readParamFromVfsFile ? resource.getResourceId().toString()
 							: XmlHandling.getChildElementTextValue(
 									currentElement,
-									CmsImportVersion7.N_UUIDRESOURCE));
+									CmsImportVersion10.N_UUIDRESOURCE));
 		} else {
-			fileParamMap.put(CmsImportVersion7.N_UUIDRESOURCE, null);
+			fileParamMap.put(CmsImportVersion10.N_UUIDRESOURCE, null);
 		}
 
 		// <userlastmodified>
 		fileParamMap.put(
-				CmsImportVersion7.N_USERLASTMODIFIED,
+				CmsImportVersion10.N_USERLASTMODIFIED,
 				readParamFromVfsFile ? this.getCms()
 						.readUser(resource.getUserLastModified()).getName()
 						: getUserFieldFromMetadata(currentElement,
-								CmsImportVersion7.N_USERLASTMODIFIED));
+								CmsImportVersion10.N_USERLASTMODIFIED));
 
 		// <usercreated>
 		fileParamMap.put(
-				CmsImportVersion7.N_USERCREATED,
+				CmsImportVersion10.N_USERCREATED,
 				readParamFromVfsFile ? this.getCms()
 						.readUser(resource.getUserLastModified()).getName()
 						: getUserFieldFromMetadata(currentElement,
-								CmsImportVersion7.N_USERCREATED));
+								CmsImportVersion10.N_USERCREATED));
 
 		// <datecreated>
 		fileParamMap.put(
-				CmsImportVersion7.N_DATECREATED,
+				CmsImportVersion10.N_DATECREATED,
 				readParamFromVfsFile ? resource.getDateCreated() / 1000
 						: getDateFieldFromMetadata(currentElement,
-								CmsImportVersion7.N_DATECREATED,
+								CmsImportVersion10.N_DATECREATED,
 								System.currentTimeMillis()) / 1000);
 
 		// <datereleased>
 		fileParamMap.put(
-				CmsImportVersion7.N_DATERELEASED,
+				CmsImportVersion10.N_DATERELEASED,
 				readParamFromVfsFile ? resource.getDateReleased() / 1000
 						: getDateFieldFromMetadata(currentElement,
-								CmsImportVersion7.N_DATERELEASED,
+								CmsImportVersion10.N_DATERELEASED,
 								CmsResource.DATE_RELEASED_DEFAULT) / 1000);
 
 		// <dateexpired>
 		fileParamMap.put(
-				CmsImportVersion7.N_DATEEXPIRED,
+				CmsImportVersion10.N_DATEEXPIRED,
 				readParamFromVfsFile ? resource.getDateExpired() / 1000
 						: getDateFieldFromMetadata(currentElement,
-								CmsImportVersion7.N_DATEEXPIRED,
+								CmsImportVersion10.N_DATEEXPIRED,
 								CmsResource.DATE_EXPIRED_DEFAULT) / 1000);
 
 		// <flags>
 		fileParamMap.put(
-				CmsImportVersion7.N_FLAGS,
+				CmsImportVersion10.N_FLAGS,
 				readParamFromVfsFile ? String.valueOf(resource.getFlags())
 						: XmlHandling.getChildElementTextValue(currentElement,
-								CmsImportVersion7.N_FLAGS));
+								CmsImportVersion10.N_FLAGS));
 
 		// <properties>
 		fileParamMap.put(
-				CmsImportVersion7.N_PROPERTIES,
+				CmsImportVersion10.N_PROPERTIES,
 				readParamFromVfsFile ? this.getCms().readPropertyObjects(
 						resource, false) : this.readPropertiesFromManifest(
 						currentElement, ignoredProperties));
 
 		// <accesscontrol>
 		fileParamMap
-				.put(CmsImportVersion7.N_ACCESSCONTROL_ENTRIES,
+				.put(CmsImportVersion10.N_ACCESSCONTROL_ENTRIES,
 						readParamFromVfsFile ? this.getCms()
 								.getAccessControlEntries(
 										this.getCms().getSitePath(resource),
@@ -1782,10 +1743,10 @@ public class VfsSync extends XmlHandling {
 										uuidstructure,
 										currentElement
 												.selectNodes("*/"
-														+ CmsImportVersion7.N_ACCESSCONTROL_ENTRY)));
+														+ CmsImportVersion10.N_ACCESSCONTROL_ENTRY)));
 		// <relations>
 		fileParamMap.put(
-				CmsImportVersion7.N_RELATIONS,
+				CmsImportVersion10.N_RELATIONS,
 				readParamFromVfsFile ? this.getCms().getRelationsForResource(
 						this.getCms().getSitePath(resource),
 						CmsRelationFilter.TARGETS.filterNotDefinedInContent())
@@ -1808,19 +1769,19 @@ public class VfsSync extends XmlHandling {
 			final String fieldname) {
 		return OpenCms.getImportExportManager().translateUser(
 				XmlHandling.getChildElementTextValue(currentElement,
-						CmsImportVersion7.N_USERLASTMODIFIED));
+						CmsImportVersion10.N_USERLASTMODIFIED));
 	}
 
 	private List<CmsAccessControlEntry> getACEList(final String uuidresource,
 			final List acentryNodes) {
-		final List<CmsAccessControlEntry> aceList = new ArrayList<CmsAccessControlEntry>();
+		final List<CmsAccessControlEntry> aceList = new ArrayList<>();
 		Element currentEntry;
 		for (int j = 0; j < acentryNodes.size(); j++) {
 			currentEntry = (Element) acentryNodes.get(j);
 
 			// get the data of the access control entry
 			final String id = XmlHandling.getChildElementTextValue(
-					currentEntry, CmsImportVersion7.N_ACCESSCONTROL_PRINCIPAL);
+					currentEntry, CmsImportVersion10.N_ACCESSCONTROL_PRINCIPAL);
 			String principalId = new CmsUUID().toString();
 			String principal = id.substring(id.indexOf('.') + 1, id.length());
 
@@ -1849,20 +1810,20 @@ public class VfsSync extends XmlHandling {
 				}
 
 				final String acflags = XmlHandling.getChildElementTextValue(
-						currentEntry, CmsImportVersion7.N_FLAGS);
+						currentEntry, CmsImportVersion10.N_FLAGS);
 				final String allowed = ((Element) currentEntry
 						.selectNodes(
 								"./"
-										+ CmsImportVersion7.N_ACCESSCONTROL_PERMISSIONSET
+										+ CmsImportVersion10.N_ACCESSCONTROL_PERMISSIONSET
 										+ "/"
-										+ CmsImportVersion7.N_ACCESSCONTROL_ALLOWEDPERMISSIONS)
+										+ CmsImportVersion10.N_ACCESSCONTROL_ALLOWEDPERMISSIONS)
 						.get(0)).getTextTrim();
 				final String denied = ((Element) currentEntry
 						.selectNodes(
 								"./"
-										+ CmsImportVersion7.N_ACCESSCONTROL_PERMISSIONSET
+										+ CmsImportVersion10.N_ACCESSCONTROL_PERMISSIONSET
 										+ "/"
-										+ CmsImportVersion7.N_ACCESSCONTROL_DENIEDPERMISSIONS)
+										+ CmsImportVersion10.N_ACCESSCONTROL_DENIEDPERMISSIONS)
 						.get(0)).getTextTrim();
 				aceList.add(new CmsAccessControlEntry(
 						new CmsUUID(uuidresource), new CmsUUID(principalId),
@@ -1897,7 +1858,7 @@ public class VfsSync extends XmlHandling {
     }
 
     /**
-     * Imports a resource from the RFS to the VFS and updates the synchronisation
+     * Imports a resource from the RFS to the VFS and updates the synchronization
      * lists.
      * <p>
      *
@@ -2029,7 +1990,7 @@ public class VfsSync extends XmlHandling {
                                                          .container(org.opencms.synchronize.Messages.ERR_WRITE_FILE_0));
         }
 
-        // add resource to synchronisation list
+        // add resource to synchronization list
         final CmsSynchronizeList sList = new CmsSynchronizeList(sync.getResName(),
                 this.translate(resourcename), readres.getDateLastModified(), fsFile.lastModified());
         this.newSyncList.put(this.translate(resourcename), sList);
@@ -2058,38 +2019,19 @@ public class VfsSync extends XmlHandling {
     // code taken from org.opencms.synchronize.CmsSynchronize
     private void writeFileByte(final byte[] content, final File file)
         throws IOException {
-        FileOutputStream fOut = null;
-        DataOutputStream dOut = null;
 
-        try {
+        try (FileOutputStream fOut = new FileOutputStream(file);
+                DataOutputStream dOut = new DataOutputStream(fOut);){
             // write the content to the file in server filesystem
-            fOut = new FileOutputStream(file);
-            dOut = new DataOutputStream(fOut);
             dOut.write(content);
             dOut.flush();
         } catch (final IOException e) {
             throw e;
-        } finally {
-            try {
-                if (fOut != null) {
-                    fOut.close();
-                }
-            } catch (final IOException e) {
-                // ignore
-            }
-
-            try {
-                if (dOut != null) {
-                    dOut.close();
-                }
-            } catch (final IOException e) {
-                // ignore
-            }
         }
     }
 
     /**
-     * Writes the synchronisation list of the current sync process to the RFS.
+     * Writes the synchronization list of the current sync process to the RFS.
      * <p>
      *
      * The file can be found in the synchronization folder
@@ -2105,13 +2047,8 @@ public class VfsSync extends XmlHandling {
         syncListFile = new File(this.destinationPathInRfs,
                 VfsSync.SYNCLIST_FILENAME);
 
-        // prepare the streams to write the data
-        FileOutputStream fOut = null;
-        PrintWriter pOut = null;
-
-        try {
-            fOut = new FileOutputStream(syncListFile);
-            pOut = new PrintWriter(fOut);
+        try (FileOutputStream fOut = new FileOutputStream(syncListFile);
+                PrintWriter pOut = new PrintWriter(fOut);){
             pOut.println(CmsSynchronizeList.getFormatDescription());
 
             // get all keys from the hashmap and make an iterator on it
@@ -2127,21 +2064,6 @@ public class VfsSync extends XmlHandling {
         } catch (final IOException e) {
             throw new CmsDbIoException(org.opencms.synchronize.Messages.get()
                                                .container(org.opencms.synchronize.Messages.ERR_IO_WRITE_SYNCLIST_0), e);
-        } finally {
-            // close all streams that were used
-            try {
-                if (pOut != null) {
-                    pOut.flush();
-                    pOut.close();
-                }
-
-                if (fOut != null) {
-                    fOut.flush();
-                    fOut.close();
-                }
-            } catch (final IOException e) {
-                // ignore
-            }
         }
     }
 
@@ -2218,37 +2140,37 @@ public class VfsSync extends XmlHandling {
         throws CmsImportExportException, SAXException {
         try {
             // define the file node
-            final Element fileElement = resourceNode.addElement(CmsImportExportManager.N_FILE);
+            final Element fileElement = resourceNode.addElement(CmsImportVersion10.N_FILE);
 
             // only write <source> if resource is a file
             final String sitepath = this.getCms().getSitePath(resource);
             final String fileName = this.trimResourceName(sitepath);
 
             if (resource.isFile() && source) {
-                fileElement.addElement(CmsImportExportManager.N_SOURCE)
+                fileElement.addElement(CmsImportVersion10.N_SOURCE)
                            .addText(fileName);
             }
 
             // <destination>
-            fileElement.addElement(CmsImportExportManager.N_DESTINATION)
+            fileElement.addElement(CmsImportVersion10.N_DESTINATION)
                        .addText(fileName);
             // <type>
-            fileElement.addElement(CmsImportExportManager.N_TYPE)
+            fileElement.addElement(CmsImportVersion10.N_TYPE)
                        .addText(OpenCms.getResourceManager()
                                        .getResourceType(resource.getTypeId())
                                        .getTypeName());
             //  <uuidstructure>
-            fileElement.addElement(CmsImportExportManager.N_UUIDSTRUCTURE)
+            fileElement.addElement(CmsImportVersion10.N_UUIDSTRUCTURE)
                        .addText(resource.getStructureId().toString());
 
             if (resource.isFile()) {
                 // <uuidresource>
-                fileElement.addElement(CmsImportExportManager.N_UUIDRESOURCE)
+                fileElement.addElement(CmsImportVersion10.N_UUIDRESOURCE)
                            .addText(resource.getResourceId().toString());
             }
 
             // <datelastmodified>
-            fileElement.addElement(CmsImportExportManager.N_DATELASTMODIFIED)
+            fileElement.addElement(CmsImportVersion10.N_DATELASTMODIFIED)
                        .addText(CmsDateUtil.getHeaderDate(
                     resource.getDateLastModified()));
 
@@ -2266,10 +2188,10 @@ public class VfsSync extends XmlHandling {
             // in OpenCms 6.2.3 fällt das escapeXml weg,
             // weil es allgemein im CmsXmlSaxWriter geregelt wird
             // siehe XmlHandling
-            fileElement.addElement(CmsImportExportManager.N_USERLASTMODIFIED)
+            fileElement.addElement(CmsImportVersion10.N_USERLASTMODIFIED)
                        .addText(CmsEncoder.escapeXml(userNameLastModified));
             // <datecreated>
-            fileElement.addElement(CmsImportExportManager.N_DATECREATED)
+            fileElement.addElement(CmsImportVersion10.N_DATECREATED)
                        .addText(CmsDateUtil.getHeaderDate(
                     resource.getDateCreated()));
 
@@ -2287,19 +2209,19 @@ public class VfsSync extends XmlHandling {
             // in OpenCms 6.2.3 fällt das escapeXml weg,
             // weil es allgemein im CmsXmlSaxWriter geregelt wird
             // siehe XmlHandling
-            fileElement.addElement(CmsImportExportManager.N_USERCREATED)
+            fileElement.addElement(CmsImportVersion10.N_USERCREATED)
                        .addText(CmsEncoder.escapeXml(userNameCreated));
 
             // <release>
             if (resource.getDateReleased() != CmsResource.DATE_RELEASED_DEFAULT) {
-                fileElement.addElement(CmsImportExportManager.N_DATERELEASED)
+                fileElement.addElement(CmsImportVersion10.N_DATERELEASED)
                            .addText(CmsDateUtil.getHeaderDate(
                         resource.getDateReleased()));
             }
 
             // <expire>
             if (resource.getDateExpired() != CmsResource.DATE_EXPIRED_DEFAULT) {
-                fileElement.addElement(CmsImportExportManager.N_DATEEXPIRED)
+                fileElement.addElement(CmsImportVersion10.N_DATEEXPIRED)
                            .addText(CmsDateUtil.getHeaderDate(
                         resource.getDateExpired()));
             }
@@ -2307,19 +2229,19 @@ public class VfsSync extends XmlHandling {
             // <flags>
             int resFlags = resource.getFlags();
             resFlags &= ~CmsResource.FLAG_LABELED;
-            fileElement.addElement(CmsImportExportManager.N_FLAGS)
+            fileElement.addElement(CmsImportVersion10.N_FLAGS)
                        .addText(Integer.toString(resFlags));
 
             // write the properties to the manifest
-            final Element propertiesElement = fileElement.addElement(CmsImportExportManager.N_PROPERTIES);
-            final List properties = this.getCms()
+            final Element propertiesElement = fileElement.addElement(CmsImportVersion10.N_PROPERTIES);
+            final List<CmsProperty> properties = this.getCms()
                                         .readPropertyObjects(sitepath, false);
 
             // sort the properties for a well defined output order
             Collections.sort(properties);
 
             for (int i = 0, n = properties.size(); i < n; i++) {
-                final CmsProperty property = (CmsProperty) properties.get(i);
+                final CmsProperty property = properties.get(i);
 
                 if (this.isIgnoredProperty(property)) {
                     continue;
@@ -2332,16 +2254,16 @@ public class VfsSync extends XmlHandling {
             }
 
             // Write the relations to the manifest
-            final List relations = this.getCms()
+            final List<CmsRelation> relations = this.getCms()
                                        .getRelationsForResource(this.getCms()
                                                                     .getSitePath(resource),
                     CmsRelationFilter.TARGETS.filterNotDefinedInContent());
             CmsRelation relation = null;
-            final Element relationsElement = fileElement.addElement(CmsImportExportManager.N_RELATIONS);
+            final Element relationsElement = fileElement.addElement(CmsImportVersion10.N_RELATIONS);
 
             // iterate over the relations
-            for (final Iterator iter = relations.iterator(); iter.hasNext();) {
-                relation = (CmsRelation) iter.next();
+            for (final Iterator<CmsRelation> iter = relations.iterator(); iter.hasNext();) {
+                relation = iter.next();
 
                 final CmsResource target = relation.getTarget(this.getCms(),
                         CmsResourceFilter.ALL);
@@ -2354,18 +2276,18 @@ public class VfsSync extends XmlHandling {
             }
 
             // append the nodes for access control entries
-            final Element acl = fileElement.addElement(CmsImportExportManager.N_ACCESSCONTROL_ENTRIES);
+            final Element acl = fileElement.addElement(CmsImportVersion10.N_ACCESSCONTROL_ENTRIES);
 
             // read the access control entries
-            final List fileAcEntries = this.getCms()
+            final List<CmsAccessControlEntry> fileAcEntries = this.getCms()
                                            .getAccessControlEntries(sitepath,
                     false);
-            final Iterator i = fileAcEntries.iterator();
+            final Iterator<CmsAccessControlEntry> i = fileAcEntries.iterator();
 
             // create xml elements for each access control entry
             while (i.hasNext()) {
-                final CmsAccessControlEntry ace = (CmsAccessControlEntry) i.next();
-                final Element a = acl.addElement(CmsImportExportManager.N_ACCESSCONTROL_ENTRY);
+                final CmsAccessControlEntry ace = i.next();
+                final Element a = acl.addElement(CmsImportVersion10.N_ACCESSCONTROL_ENTRY);
 
                 // now check if the principal is a group or a user
                 final int flags = ace.getFlags();
@@ -2394,15 +2316,15 @@ public class VfsSync extends XmlHandling {
                 // in OpenCms 6.2.3 f�llt das escapeXml weg,
                 // weil es allgemein im CmsXmlSaxWriter geregelt wird
                 // siehe XmlHandling
-                a.addElement(CmsImportExportManager.N_ACCESSCONTROL_PRINCIPAL)
+                a.addElement(CmsImportVersion10.N_ACCESSCONTROL_PRINCIPAL)
                  .addText(CmsEncoder.escapeXml(acePrincipalName));
-                a.addElement(CmsImportExportManager.N_FLAGS)
+                a.addElement(CmsImportVersion10.N_FLAGS)
                  .addText(Integer.toString(flags));
 
-                final Element b = a.addElement(CmsImportExportManager.N_ACCESSCONTROL_PERMISSIONSET);
-                b.addElement(CmsImportExportManager.N_ACCESSCONTROL_ALLOWEDPERMISSIONS)
+                final Element b = a.addElement(CmsImportVersion10.N_ACCESSCONTROL_PERMISSIONSET);
+                b.addElement(CmsImportVersion10.N_ACCESSCONTROL_ALLOWEDPERMISSIONS)
                  .addText(Integer.toString(ace.getAllowedPermissions()));
-                b.addElement(CmsImportExportManager.N_ACCESSCONTROL_DENIEDPERMISSIONS)
+                b.addElement(CmsImportVersion10.N_ACCESSCONTROL_DENIEDPERMISSIONS)
                  .addText(Integer.toString(ace.getDeniedPermissions()));
             }
 
@@ -2432,7 +2354,7 @@ public class VfsSync extends XmlHandling {
         final String propertyName, final String propertyValue,
         final boolean shared) {
         if (propertyValue != null) {
-            final Element propertyElement = propertiesElement.addElement(CmsImportExportManager.N_PROPERTY);
+            final Element propertyElement = propertiesElement.addElement(CmsImportVersion10.N_PROPERTY);
 
             if (shared) {
                 // add "type" attribute to the property node in case of a shared/resource property value
@@ -2440,9 +2362,9 @@ public class VfsSync extends XmlHandling {
                     CmsImportExportManager.N_PROPERTY_ATTRIB_TYPE_SHARED);
             }
 
-            propertyElement.addElement(CmsImportExportManager.N_NAME)
+            propertyElement.addElement(CmsImportVersion10.N_NAME)
                            .addText(propertyName);
-            propertyElement.addElement(CmsImportExportManager.N_VALUE)
+            propertyElement.addElement(CmsImportVersion10.N_VALUE)
                            .addCDATA(propertyValue);
         }
     }
@@ -2462,7 +2384,7 @@ public class VfsSync extends XmlHandling {
         final String relationType) {
         if ((structureId != null) && (sitePath != null) &&
                 (relationType != null)) {
-            final Element relationElement = relationsElement.addElement(CmsImportExportManager.N_RELATION);
+            final Element relationElement = relationsElement.addElement(CmsImportVersion10.N_RELATION);
 
             relationElement.addElement(CmsImportExportManager.N_RELATION_ATTRIBUTE_ID)
                            .addText(structureId);
@@ -2550,17 +2472,17 @@ public class VfsSync extends XmlHandling {
         final CmsImportExportManager iomanager = OpenCms.getImportExportManager();
 
         // get list of immutable resources
-        List immutableResources = iomanager.getImmutableResources();
+        List<String> immutableResources = iomanager.getImmutableResources();
 
         if (immutableResources == null) {
-            immutableResources = Collections.EMPTY_LIST;
+            immutableResources = Collections.emptyList();
         }
 
         // get list of ignored properties
-        List ignoredProperties = iomanager.getIgnoredProperties();
+        List<String> ignoredProperties = iomanager.getIgnoredProperties();
 
         if (ignoredProperties == null) {
-            ignoredProperties = Collections.EMPTY_LIST;
+            ignoredProperties = Collections.emptyList();
         }
 
         // get the desired page type for imported pages
@@ -2568,35 +2490,35 @@ public class VfsSync extends XmlHandling {
         try {
             currentElement = (Element) this.getDocXml()
                                            .selectNodes("//" +
-                    CmsImportExportManager.N_FILE).get(0);
+                    CmsImportVersion10.N_FILE).get(0);
             // <source>
             // DET source = CmsImport.getChildElementTextValue(currentElement,
             // CmsImportExportManager.N_SOURCE);
             // <destination>
             destination = XmlHandling.getChildElementTextValue(currentElement,
-                    CmsImportExportManager.N_DESTINATION);
+                    CmsImportVersion10.N_DESTINATION);
 
             // <type>
             final String typeName = XmlHandling.getChildElementTextValue(currentElement,
-                    CmsImportExportManager.N_TYPE);
+                    CmsImportVersion10.N_TYPE);
             final I_CmsResourceType type = OpenCms.getResourceManager()
                                                   .getResourceType(typeName);
 
             // <uuidstructure>
             uuidstructure = XmlHandling.getChildElementTextValue(currentElement,
-                    CmsImportExportManager.N_UUIDSTRUCTURE);
+                    CmsImportVersion10.N_UUIDSTRUCTURE);
 
             // <uuidresource>
             if (!type.isFolder()) {
                 uuidresource = XmlHandling.getChildElementTextValue(currentElement,
-                        CmsImportExportManager.N_UUIDRESOURCE);
+                        CmsImportVersion10.N_UUIDRESOURCE);
             } else {
                 uuidresource = null;
             }
 
             // <datelastmodified>
             timestamp = XmlHandling.getChildElementTextValue(currentElement,
-                    CmsImportExportManager.N_DATELASTMODIFIED);
+                    CmsImportVersion10.N_DATELASTMODIFIED);
 
             if (timestamp != null) {
                 datelastmodified = this.convertTimestamp(timestamp);
@@ -2606,12 +2528,12 @@ public class VfsSync extends XmlHandling {
 
             // <userlastmodified>
             userlastmodified = XmlHandling.getChildElementTextValue(currentElement,
-                    CmsImportExportManager.N_USERLASTMODIFIED);
+                    CmsImportVersion10.N_USERLASTMODIFIED);
             userlastmodified = iomanager.translateUser(userlastmodified);
 
             // <datecreated>
             timestamp = XmlHandling.getChildElementTextValue(currentElement,
-                    CmsImportExportManager.N_DATECREATED);
+                    CmsImportVersion10.N_DATECREATED);
 
             if (timestamp != null) {
                 datecreated = this.convertTimestamp(timestamp);
@@ -2621,12 +2543,12 @@ public class VfsSync extends XmlHandling {
 
             // <usercreated>
             usercreated = XmlHandling.getChildElementTextValue(currentElement,
-                    CmsImportExportManager.N_USERCREATED);
+                    CmsImportVersion10.N_USERCREATED);
             usercreated = iomanager.translateUser(usercreated);
 
             // <datereleased>
             timestamp = XmlHandling.getChildElementTextValue(currentElement,
-                    CmsImportExportManager.N_DATERELEASED);
+                    CmsImportVersion10.N_DATERELEASED);
 
             if (timestamp != null) {
                 datereleased = this.convertTimestamp(timestamp);
@@ -2636,7 +2558,7 @@ public class VfsSync extends XmlHandling {
 
             // <dateexpired>
             timestamp = XmlHandling.getChildElementTextValue(currentElement,
-                    CmsImportExportManager.N_DATEEXPIRED);
+                    CmsImportVersion10.N_DATEEXPIRED);
 
             if (timestamp != null) {
                 dateexpired = this.convertTimestamp(timestamp);
@@ -2646,7 +2568,7 @@ public class VfsSync extends XmlHandling {
 
             // <flags>
             flags = XmlHandling.getChildElementTextValue(currentElement,
-                    CmsImportExportManager.N_FLAGS);
+                    CmsImportVersion10.N_FLAGS);
 
             // apply name translation and import path
             String translatedName = this.getCms().getRequestContext()
@@ -2690,10 +2612,10 @@ public class VfsSync extends XmlHandling {
                             translatedName));
                 } else {
 
-                    final List aceList = new ArrayList();
+                    final List<CmsAccessControlEntry> aceList = new ArrayList<>();
                     // write all imported access control entries for this file
                     acentryNodes = currentElement.selectNodes("*/" +
-                            CmsImportExportManager.N_ACCESSCONTROL_ENTRY);
+                            CmsImportVersion10.N_ACCESSCONTROL_ENTRY);
 
                     // collect all access control entries
                     for (int j = 0; j < acentryNodes.size(); j++) {
@@ -2701,7 +2623,7 @@ public class VfsSync extends XmlHandling {
 
                         // get the data of the access control entry
                         final String id = XmlHandling.getChildElementTextValue(currentEntry,
-                                CmsImportExportManager.N_ACCESSCONTROL_PRINCIPAL);
+                                CmsImportVersion10.N_ACCESSCONTROL_PRINCIPAL);
                         String principalId = new CmsUUID().toString();
                         String principal = id.substring(id.indexOf('.') + 1,
                                 id.length());
@@ -2730,18 +2652,18 @@ public class VfsSync extends XmlHandling {
                             }
 
                             final String acflags = XmlHandling.getChildElementTextValue(currentEntry,
-                                    CmsImportExportManager.N_FLAGS);
+                                    CmsImportVersion10.N_FLAGS);
                             final String allowed = ((Element) currentEntry.selectNodes(
                                     "./" +
-                                    CmsImportExportManager.N_ACCESSCONTROL_PERMISSIONSET +
+                                    CmsImportVersion10.N_ACCESSCONTROL_PERMISSIONSET +
                                     "/" +
-                                    CmsImportExportManager.N_ACCESSCONTROL_ALLOWEDPERMISSIONS)
+                                    CmsImportVersion10.N_ACCESSCONTROL_ALLOWEDPERMISSIONS)
                                                                           .get(0)).getTextTrim();
                             final String denied = ((Element) currentEntry.selectNodes(
                                     "./" +
-                                    CmsImportExportManager.N_ACCESSCONTROL_PERMISSIONSET +
+                                    CmsImportVersion10.N_ACCESSCONTROL_PERMISSIONSET +
                                     "/" +
-                                    CmsImportExportManager.N_ACCESSCONTROL_DENIEDPERMISSIONS)
+                                    CmsImportVersion10.N_ACCESSCONTROL_DENIEDPERMISSIONS)
                                                                          .get(0)).getTextTrim();
                             // add the entry to the list
                             aceList.add(this.getImportAccessControlEntry(res,
@@ -2811,10 +2733,10 @@ public class VfsSync extends XmlHandling {
 			final Element parentElement) {
 		// Get the nodes for the relations
 		final List relationElements = parentElement.selectNodes("./"
-				+ CmsImportExportManager.N_RELATIONS + "/"
-				+ CmsImportExportManager.N_RELATION);
+				+ CmsImportVersion10.N_RELATIONS + "/"
+				+ CmsImportVersion10.N_RELATION);
 
-		final List<CmsRelation> relations = new ArrayList<CmsRelation>();
+		final List<CmsRelation> relations = new ArrayList<>();
 
 		// iterate over the nodes
 		final Iterator itRelations = relationElements.iterator();
@@ -2892,11 +2814,11 @@ public class VfsSync extends XmlHandling {
         final List ignoredPropertyKeys) {
         // all imported Cms property objects are collected in map first
         // for faster access
-        final Map properties = new HashMap();
+        final Map<String, CmsProperty> properties = new HashMap<>();
         CmsProperty property = null;
         final List propertyElements = parentElement.selectNodes("./" +
-                CmsImportExportManager.N_PROPERTIES + "/" +
-                CmsImportExportManager.N_PROPERTY);
+                CmsImportVersion10.N_PROPERTIES + "/" +
+                CmsImportVersion10.N_PROPERTY);
         Element propertyElement = null;
         String key = null;
         String value = null;
@@ -2906,7 +2828,7 @@ public class VfsSync extends XmlHandling {
         for (int i = 0, n = propertyElements.size(); i < n; i++) {
             propertyElement = (Element) propertyElements.get(i);
             key = XmlHandling.getChildElementTextValue(propertyElement,
-                    CmsImportExportManager.N_NAME);
+                    CmsImportVersion10.N_NAME);
 
             if ((key == null) || ignoredPropertyKeys.contains(key)) {
                 // continue if the current property (key) should be ignored or
@@ -2916,7 +2838,7 @@ public class VfsSync extends XmlHandling {
 
             // all Cms properties are collected in a map keyed by their property
             // keys
-            property = (CmsProperty) properties.get(key);
+            property = properties.get(key);
 
             if (property == null) {
                 property = new CmsProperty();
@@ -2926,7 +2848,7 @@ public class VfsSync extends XmlHandling {
             }
 
             value = XmlHandling.getChildElementTextValue(propertyElement,
-                    CmsImportExportManager.N_VALUE);
+                    CmsImportVersion10.N_VALUE);
 
             if (value == null) {
                 value = "";
@@ -3031,7 +2953,7 @@ public class VfsSync extends XmlHandling {
                                           .getId();
             } catch (final CmsException e) {
                 newUserlastmodified = this.getCms().getRequestContext()
-                                          .currentUser().getId();
+                                          .getCurrentUser().getId();
 
                 // datelastmodified = System.currentTimeMillis();
             }
@@ -3039,7 +2961,7 @@ public class VfsSync extends XmlHandling {
             try {
                 newUsercreated = this.getCms().readUser(usercreated).getId();
             } catch (final CmsException e) {
-                newUsercreated = this.getCms().getRequestContext().currentUser()
+                newUsercreated = this.getCms().getRequestContext().getCurrentUser()
                                      .getId();
 
                 // datecreated = System.currentTimeMillis();
@@ -3070,8 +2992,8 @@ public class VfsSync extends XmlHandling {
             // create a new CmsResource
             final CmsResource resource = new CmsResource(newUuidstructure,
                     newUuidresource, destination, type.getTypeId(),
-                    type.isFolder(), Integer.valueOf(flags).intValue(),
-                    this.getCms().getRequestContext().currentProject().getUuid(),
+                    type.isFolder(), Integer.parseInt(flags),
+                    this.getCms().getRequestContext().getCurrentProject().getUuid(),
                     CmsResource.STATE_NEW, datecreated, newUsercreated,
                     datelastmodified, newUserlastmodified, datereleased,
                     dateexpired, 1, size, System.currentTimeMillis(), 0);
@@ -3290,9 +3212,9 @@ public class VfsSync extends XmlHandling {
     }
 
     /**
-     * Set the path in RFS to use for content synchronisation.
+     * Set the path in RFS to use for content synchronization.
      *
-     * Used when OpenCms integrated synchronisation is called.
+     * Used when OpenCms integrated synchronization is called.
      *
      * @param pathInRfs
      *            path in RFS
@@ -3302,9 +3224,9 @@ public class VfsSync extends XmlHandling {
     }
 
     /**
-     * Set the path in RFS to use for metadata synchronisation.
+     * Set the path in RFS to use for metadata synchronization.
      *
-     * Used when OpenCms integrated synchronisation is called.
+     * Used when OpenCms integrated synchronization is called.
      *
      * @param pathInRfs
      *            path in RFS
