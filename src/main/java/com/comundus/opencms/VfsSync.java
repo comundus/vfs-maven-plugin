@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.dom4j.Attribute;
@@ -41,6 +40,7 @@ import org.opencms.importexport.CmsImportExportException;
 import org.opencms.importexport.CmsImportExportManager;
 import org.opencms.importexport.CmsImportVersion10;
 import org.opencms.loader.CmsLoaderException;
+import org.opencms.loader.CmsTemplateContextManager;
 import org.opencms.main.CmOpenCmsShell;
 import org.opencms.main.CmsEvent;
 import org.opencms.main.CmsException;
@@ -64,6 +64,12 @@ import org.opencms.xml.CmsXmlUtils;
 import org.xml.sax.SAXException;
 
 import com.comundus.opencms.vfs.SyncResource;
+
+import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.agent.ByteBuddyAgent;
+import net.bytebuddy.dynamic.loading.ClassReloadingStrategy;
+import net.bytebuddy.implementation.MethodDelegation;
+import net.bytebuddy.matcher.ElementMatchers;
 
 /**
  * Performs VFS synchronization.
@@ -175,6 +181,17 @@ public class VfsSync extends XmlHandling {
 	this.m_parseables = new ArrayList<>();
 	this.m_importedRelations = new HashMap<>();
 
+	//Override updateContextMap() in CmsTemplateContextManager.class
+        ByteBuddyAgent.install();
+        new ByteBuddy()
+          .redefine(CmsTemplateContextManager.class)
+          .method(ElementMatchers.named("updateContextMap"))
+          .intercept(MethodDelegation.to(TemplateContextInterceptor.class))
+          .make()
+          .load(
+            CmsTemplateContextManager.class.getClassLoader(), 
+            ClassReloadingStrategy.fromInstalledAgent());
+        
 	final String webinfdir = webappDirectory + File.separatorChar +
 		"WEB-INF";
 	final CmOpenCmsShell cmsshell = CmOpenCmsShell.getInstance(webinfdir,
@@ -223,7 +240,7 @@ public class VfsSync extends XmlHandling {
 
 	this.getCms().unlockProject(offlineProject.getUuid());
     }
-
+    
     private void clearAllCaches() {
         OpenCms.fireCmsEvent(I_CmsEventListener.EVENT_CLEAR_CACHES, Collections.<String, Object> emptyMap());
         OpenCms.fireCmsEvent(new CmsEvent(I_CmsEventListener.EVENT_FLEX_PURGE_JSP_REPOSITORY, 
