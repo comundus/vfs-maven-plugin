@@ -25,6 +25,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.dom4j.Attribute;
 import org.dom4j.Element;
+import org.opencms.ade.configuration.formatters.CmsFormatterConfigurationCache;
 import org.opencms.db.CmsDbIoException;
 import org.opencms.file.CmsFile;
 import org.opencms.file.CmsProject;
@@ -181,16 +182,26 @@ public class VfsSync extends XmlHandling {
 	this.m_parseables = new ArrayList<>();
 	this.m_importedRelations = new HashMap<>();
 
-	//Override updateContextMap() in CmsTemplateContextManager.class
         ByteBuddyAgent.install();
+        //Override updateContextMap() in CmsTemplateContextManager.class
         new ByteBuddy()
           .redefine(CmsTemplateContextManager.class)
           .method(ElementMatchers.named("updateContextMap"))
           .intercept(MethodDelegation.to(TemplateContextInterceptor.class))
           .make()
           .load(
-            CmsTemplateContextManager.class.getClassLoader(), 
-            ClassReloadingStrategy.fromInstalledAgent());
+              CmsTemplateContextManager.class.getClassLoader(), 
+              ClassReloadingStrategy.fromInstalledAgent());
+        
+        //Override performUpdate() in CmsFormatterConfigurationCache.class
+        new ByteBuddy()
+           .redefine(CmsFormatterConfigurationCache.class)
+           .method(ElementMatchers.named("performUpdate"))
+           .intercept(MethodDelegation.to(FormatterConfigurationCacheInterceptor.class))
+           .make()
+           .load(
+               CmsFormatterConfigurationCache.class.getClassLoader(), 
+               ClassReloadingStrategy.fromInstalledAgent());
         
 	final String webinfdir = webappDirectory + File.separatorChar +
 		"WEB-INF";
