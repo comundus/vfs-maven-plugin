@@ -9,7 +9,7 @@
     <groupId>com.comundus.maven</groupId>
     <artifactId>vfs-maven-plugin</artifactId>
     <packaging>maven-plugin</packaging>
-    <version>15.0</version>
+    <version>15.0.1</version>
     <name>VFS Maven Plugin</name>
     <url>http://opencms-maven.comundus.com</url>
     <description>Maven plugin for synchronizing OpenCms VFS data with project sources.</description>
