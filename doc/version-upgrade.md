@@ -126,15 +126,10 @@ the database schema named `opencms`.
 
 ## Changes in configuration files
 
-In the following two locations, the XML configuration files in the first will be copied to the latter, with the exception
-of `opencms-modules.xml`. The file `opencms.properties` must also be compared and the changes taken, but 
-not deleting the placeholders for configurations defined in pom.xml. e.g. `${opencms.db.jdbcDriver}`. 
+The XML configuration files from the folder `tomcat/webapps/opencms/WEB-INF/config` should be copied to [project webapp]`/src/main/webapp/WEB-INF/config/` - except of `opencms-modules.xml`. 
+The file `opencms.properties` also has to be compared and the changes taken, but not deleting the placeholders for configurations defined in pom.xml. e.g. `${opencms.db.jdbcDriver}`. 
 
-* `tomcat/webapps/opencms/WEB-INF/config`
-* [project webapp]`/src/main/webapp/WEB-INF/config/`
-
-The changes in the configuration file `opencms-modules.xml` will be transferred to the system subproject. It is 
-important to compare the files first, in order to know which modules were deleted or added in the target version.
+The changes in the configuration file `opencms-modules.xml` will be transferred to the system subproject. It is important to compare the files first, in order to know which modules were deleted or added in the target version.
 
 * `tomcat/webapps/opencms/WEB-INF/config/opencms-modules.xml`
 * [project system]`/src/main/opencms-module/opencms-module.xml`
